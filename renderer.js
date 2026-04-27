@@ -206,6 +206,18 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function escapeAttr(value) {
+    return String(value || '').replace(/[&<>"']/g, function (char) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char];
+    });
+}
+
 function normalizeImageUrl(url) {
     if (!url || !url.trim()) return '';
     const trimmed = url.trim();
@@ -295,6 +307,42 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
     const q1StyleNested = 'background-color: ' + themeStyle.quote1Bg + '; color: ' + themeStyle.quote1Text + '; padding: 0.05em 0.1em; border-radius: 2px; vertical-align: baseline; line-height: inherit;';
     const q2Style = 'background-color: ' + themeStyle.quote2Bg + '; color: ' + themeStyle.quote2Text + '; font-weight: 600; padding: 0.05em 0.25em; border-radius: 2px; vertical-align: baseline; line-height: inherit;';
     const footnoteStyle = 'font-size: 11px; color: ' + themeStyle.tagText + '; margin: -8px 0 10px 0; line-height: 1.4;';
+
+    function getProfileColor(profileIndex) {
+        const profile = ctx.profiles && ctx.profiles[profileIndex];
+        return (profile && profile.color) || themeStyle.em;
+    }
+
+    function styleWithColor(style, color) {
+        return style + ' color: ' + color + ';';
+    }
+
+    function quoteSpan(style, displayText, sourceText, lineIndex) {
+        const attrs = (ctx.enableQuoteAssignment && ctx.quotePageIndex !== undefined)
+            ? ' class="js-quote-assign" data-page-index="' + ctx.quotePageIndex + '" data-line-index="' + lineIndex + '" data-quote-source="' + escapeAttr(sourceText) + '" title="캐릭터 색상 지정"'
+            : '';
+        return '<span' + attrs + ' style="' + style + '">' + displayText + '</span>';
+    }
+
+    function characterQuoteSpan(profileIndex, sourceText, lineIndex) {
+        const color = getProfileColor(profileIndex);
+        const attrs = (ctx.enableQuoteAssignment && ctx.quotePageIndex !== undefined)
+            ? ' class="js-quote-assign" data-page-index="' + ctx.quotePageIndex + '" data-line-index="' + lineIndex + '" data-quote-source="' + escapeAttr(sourceText) + '" title="캐릭터 색상 변경"'
+            : '';
+        const first = sourceText.charAt(0);
+        const last = sourceText.charAt(sourceText.length - 1);
+        if ((first === '"' && last === '"') || (first === '“' && last === '”')) {
+            const content = sourceText.slice(1, -1);
+            const display = useRoundedQuotes ? '“' + content + '”' : '"' + content + '"';
+            return '<span' + attrs + ' style="' + styleWithColor(q2Style, color) + '">' + display + '</span>';
+        }
+        if ((first === '\'' && last === '\'') || (first === '‘' && last === '’')) {
+            const content = sourceText.slice(1, -1);
+            const display = useRoundedQuotes ? '‘' + content + '’' : '\'' + content + '\'';
+            return '<span' + attrs + ' style="' + styleWithColor(q1Style, color) + '">' + display + '</span>';
+        }
+        return '<span' + attrs + ' style="' + styleWithColor(q2Style, color) + '">' + sourceText + '</span>';
+    }
 
     let detailsBlocks = [];
     let detailsCount = 0;
@@ -512,23 +560,30 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
             return word + '{{FOOTNOTE_' + footnoteCount + '}}';
         });
 
+        const characterQuotePlaceholders = [];
+        line = line.replace(/\[CHAR:(\d+)\]([\s\S]*?)\[\/CHAR\]/g, function (match, profileIndex, quoteText) {
+            const ph = '{{CHAR_QUOTE_' + characterQuotePlaceholders.length + '}}';
+            characterQuotePlaceholders.push(characterQuoteSpan(parseInt(profileIndex, 10), quoteText, i));
+            return ph;
+        });
+
         let roundedQuotePairs = [];
         let pairIndex = 0;
 
         line = line.replace(/“([^”]*)”/g, function (match, content) {
             const innerProcessed = content.replace(/‘(.*?)’/g, function (m, c) {
                 pairIndex++;
-                roundedQuotePairs.push({ type: 'single', content: c });
+                roundedQuotePairs.push({ type: 'single', content: c, source: m });
                 return '{{ROUND_QUOTE_' + pairIndex + '}}';
             });
             pairIndex++;
-            roundedQuotePairs.push({ type: 'double', content: innerProcessed });
+            roundedQuotePairs.push({ type: 'double', content: innerProcessed, source: match });
             return '{{ROUND_QUOTE_' + pairIndex + '}}';
         });
 
         line = line.replace(/‘(.*?)(’)(?=[^\w]|$)/g, function (match, content) {
             pairIndex++;
-            roundedQuotePairs.push({ type: 'single', content: content });
+            roundedQuotePairs.push({ type: 'single', content: content, source: match });
             return '{{ROUND_QUOTE_' + pairIndex + '}}';
         });
 
@@ -551,17 +606,17 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
                 if (/^\d+['′]\s*\d*["″]?$/.test(content.trim())) return match;
                 const innerProcessed = content.replace(/(?<=[^\w\d]|^)'(.+?)'(?=[^\w\d]|$)/g, function (m, c) {
                     pairIndex++;
-                    roundedQuotePairs.push({ type: 'single', content: c, nested: true });
+                    roundedQuotePairs.push({ type: 'single', content: c, nested: true, source: m });
                     return '{{ROUND_QUOTE_' + pairIndex + '}}';
                 });
                 pairIndex++;
-                roundedQuotePairs.push({ type: 'double', content: innerProcessed });
+                roundedQuotePairs.push({ type: 'double', content: innerProcessed, source: match });
                 return '{{ROUND_QUOTE_' + pairIndex + '}}';
             });
             line = line.replace(/(?<=[^\w\d]|^)'(.+?)'(?=[^\w\d]|$)/g, function (match, content, offset) {
                 if (offset > 0 && /\d/.test(line[offset - 1])) return match;
                 pairIndex++;
-                roundedQuotePairs.push({ type: 'single', content: content });
+                roundedQuotePairs.push({ type: 'single', content: content, source: match });
                 return '{{ROUND_QUOTE_' + pairIndex + '}}';
             });
         } else {
@@ -569,24 +624,28 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
                 if (offset > 0 && /\d/.test(line[offset - 1])) return match;
                 if (/^\d+['′]\s*\d*["″]?$/.test(content.trim())) return match;
                 const innerProcessed = content.replace(/(?<=[^\w\d]|^)'(.+?)'(?=[^\w\d]|$)/g, function(m, c) {
-                    return '<span style="' + q1StyleNested + '">\'' + c + '\'</span>';
+                    return quoteSpan(q1StyleNested, '\'' + c + '\'', m, i);
                 });
-                return '<span style="' + q2Style + '">"' + innerProcessed + '"</span>';
+                return quoteSpan(q2Style, '"' + innerProcessed + '"', match, i);
             });
             line = line.replace(/(?<=[^\w\d]|^)'(.+?)'(?=[^\w\d]|$)/g, function(match, content, offset) {
                 if (offset > 0 && /\d/.test(line[offset - 1])) return match;
-                return '<span style="' + q1Style + '">\'' + content + '\'</span>';
+                return quoteSpan(q1Style, '\'' + content + '\'', match, i);
             });
         }
 
         for (let idx = roundedQuotePairs.length; idx >= 1; idx--) {
             const pair = roundedQuotePairs[idx - 1];
             if (pair.type === 'double') {
-                line = line.replace('{{ROUND_QUOTE_' + idx + '}}', '<span style="' + q2Style + '">“' + pair.content + '”</span>');
+                line = line.replace('{{ROUND_QUOTE_' + idx + '}}', quoteSpan(q2Style, '“' + pair.content + '”', pair.source, i));
             } else {
                 const style = pair.nested ? q1StyleNested : q1Style;
-                line = line.replace('{{ROUND_QUOTE_' + idx + '}}', '<span style="' + style + '">‘' + pair.content + '’</span>');
+                line = line.replace('{{ROUND_QUOTE_' + idx + '}}', quoteSpan(style, '‘' + pair.content + '’', pair.source, i));
             }
+        }
+
+        for (let i = 0; i < characterQuotePlaceholders.length; i++) {
+            line = line.replace('{{CHAR_QUOTE_' + i + '}}', function () { return characterQuotePlaceholders[i]; });
         }
 
         for (let i = unitPlaceholders.length - 1; i >= 0; i--) {
@@ -840,7 +899,8 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
             content = '<div style="background-color: rgba(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ', 0.85); padding: 0; border-radius: 1rem; margin-top: clamp(15px, 3vw, 20px);">' + content + '</div>';
             if (tagsHtml) content += tagsHtml;
             const summaryStyle = 'cursor: pointer; list-style: none; outline: none; color: inherit; font-weight: normal;';
-            let detailsHtml = '<details style="' + containerStyle + '">';
+            const openAttr = ctx && ctx.forceOpenContainer ? ' open' : '';
+            let detailsHtml = '<details' + openAttr + ' style="' + containerStyle + '">';
             detailsHtml += '<summary style="' + summaryStyle + '">' + headerInBg + '</summary>';
             detailsHtml += content + '</details>';
             return detailsHtml;
@@ -863,7 +923,8 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
         const arrowWrapperStart = '<div style="width: 100%; display: table;"><div style="display: table-row;"><div style="display: table-cell; vertical-align: middle;">';
         const arrowWrapperMid = '</div><div style="display: table-cell; vertical-align: middle; width: clamp(50px, 10vw, 70px); text-align: right; padding-right: clamp(30px, 5vw, 50px);"><span style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; color: ' + theme.tagText + ';">⌵</span></div></div></div>';
         const summaryContent = arrowWrapperStart + collapsedHeaderHtml + arrowWrapperMid;
-        let detailsHtml = '<details style="' + containerStyle + '">';
+        const openAttr = ctx && ctx.forceOpenContainer ? ' open' : '';
+        let detailsHtml = '<details' + openAttr + ' style="' + containerStyle + '">';
         detailsHtml += '<summary style="' + summaryStyle + '">' + summaryContent + '</summary>';
         detailsHtml += content + '</details>';
         return detailsHtml;
@@ -1017,7 +1078,7 @@ function generateHTML(ctx, isPreview) {
                 const hasContent = (profile.name && profile.name.trim()) || (profile.desc && profile.desc.trim());
                 if (hasContent) {
                     const nameStyle = 'display: block; font-size: clamp(13px, 2.5vw, 18px); font-weight: 700; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; color: ' + profileColor + '; line-height: 1.2; margin-bottom: clamp(6px, 1.5vw, 10px);';
-                    const tagStyle = 'font-size: clamp(8px, 1.3vw, 10px); color: ' + profileColor + '; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
+                    const tagStyle = 'font-size: clamp(8px, 1.3vw, 10px); color: ' + theme.tagText + '; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
                     topContent += '<div style="' + profileContainerStyle + '">';
                     if (hasImage) {
                         topContent += '<div style="' + imgWrapperStyle + '">';
@@ -1153,12 +1214,13 @@ function generateHTML(ctx, isPreview) {
 
             let pageContentHtml = '';
             const header = createHeader(headerText, theme, currentPage.headerImage, currentPage.headerFocusX, currentPage.headerFocusY, ctx);
-            const isExpanded = currentPage.collapsed;
             const pageImageWidth = (currentPage.imageWidth !== undefined && currentPage.imageWidth !== null) ? currentPage.imageWidth : 100;
+            const pageCtx = Object.assign({}, ctx, { quotePageIndex: index });
+            const forceOpenPage = !!currentPage.collapsed || (ctx.forceOpenPageIndexes && ctx.forceOpenPageIndexes.indexOf(index) !== -1);
 
             if (!ctx.enablePageFold) {
                 if (ctx.showHeaderWhenFoldOff) pageContentHtml += header;
-                pageContentHtml += '<div style="padding: clamp(20px, 4vw, 30px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, ctx) + '</div>';
+                pageContentHtml += '<div style="padding: clamp(20px, 4vw, 30px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, pageCtx) + '</div>';
 
                 if (currentPage.bgImage) {
                     const pageHtml = createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, null, null, false, false, ctx);
@@ -1175,33 +1237,11 @@ function generateHTML(ctx, isPreview) {
                         html += createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, null, null, false, false, ctx);
                     }
                 }
-            } else if (isExpanded) {
-                if (currentPage.bgImage) {
-                    pageContentHtml += '<div style="padding: clamp(20px, 4vw, 30px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, ctx) + '</div>';
-                } else {
-                    pageContentHtml += '<div style="padding: clamp(20px, 4vw, 30px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, ctx) + '</div>';
-                }
-
-                if (currentPage.bgImage) {
-                    const pageHtml = createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, header, null, false, false, ctx);
-                    if (isInSection) sectionContainerHtml += pageHtml;
-                    else html += pageHtml;
-                } else {
-                    if (isInSection) {
-                        sectionContainerHtml += header + pageContentHtml;
-                        if (index + 1 < ctx.pages.length && ctx.pages[index + 1].itemType !== 'section') {
-                            const hrColor = theme.divider || theme.tagText || 'rgba(0,0,0,0.1)';
-                            sectionContainerHtml += '<div style="height: 1px; background-color: ' + hrColor + '; margin: clamp(10px, 2vw, 15px) clamp(30px, 5vw, 50px);"></div>';
-                        }
-                    } else {
-                        html += createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, header, null, false, false, ctx);
-                    }
-                }
             } else {
-                let collapsedContent = '<div style="padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, ctx) + '</div>';
+                let collapsedContent = '<div style="padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, pageCtx) + '</div>';
 
                 if (currentPage.bgImage) {
-                    const pageHtml = createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, ctx);
+                    const pageHtml = createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, Object.assign({}, ctx, { forceOpenContainer: forceOpenPage }));
                     if (isInSection) sectionContainerHtml += pageHtml;
                     else html += pageHtml;
                 } else {
@@ -1210,7 +1250,7 @@ function generateHTML(ctx, isPreview) {
                         const collapsedHeaderHtml = header.replace('margin-bottom: 20px; padding-top: 20px;', 'margin: 0;').replace('vertical-align: center;', 'vertical-align: middle;');
                         const arrowWrapperStart = '<div style="width: 100%; display: table;"><div style="display: table-row;"><div style="display: table-cell; vertical-align: middle;">';
                         const arrowWrapperMid = '</div><div style="display: table-cell; vertical-align: middle; width: clamp(50px, 10vw, 70px); text-align: right; padding-right: clamp(30px, 5vw, 50px);"><span style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; color: ' + theme.tagText + ';">⌵</span></div></div></div>';
-                        sectionContainerHtml += '<details style="margin: 0;">';
+                        sectionContainerHtml += '<details' + (forceOpenPage ? ' open' : '') + ' style="margin: 0;">';
                         sectionContainerHtml += '<summary style="' + summaryStyle + '">' + arrowWrapperStart + collapsedHeaderHtml + arrowWrapperMid + '</summary>';
                         sectionContainerHtml += collapsedContent;
                         sectionContainerHtml += '</details>';
@@ -1219,7 +1259,7 @@ function generateHTML(ctx, isPreview) {
                             sectionContainerHtml += '<div style="height: 1px; background-color: ' + hrColor + '; margin: clamp(10px, 2vw, 15px) clamp(30px, 5vw, 50px);"></div>';
                         }
                     } else {
-                        html += createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, ctx);
+                        html += createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, Object.assign({}, ctx, { forceOpenContainer: forceOpenPage }));
                     }
                 }
             }
