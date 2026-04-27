@@ -8,10 +8,21 @@ document.addEventListener('DOMContentLoaded', function () {
     setupThemeToggle();
     setupSoundToggle();
     setupCreditModal();
+    setupPanelToggle();
     setupLibraryControls();
     loadChapters();
     renderChapterList();
 });
+
+function setupPanelToggle() {
+    const btn = document.getElementById('panelToggle');
+    const editorPanel = document.querySelector('.editor-panel');
+    if (!btn || !editorPanel) return;
+
+    btn.addEventListener('click', function () {
+        editorPanel.classList.toggle('panel-collapsed');
+    });
+}
 
 function setupLibraryControls() {
     const openEditor = document.getElementById('openEditor');

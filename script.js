@@ -63,6 +63,7 @@ function initializeApp() {
         setupThemeToggle();
         setupSoundToggle();
         setupCreditModal();
+        setupPanelToggle();
         loadFromStorage();
         setupEventListeners();
         setupTabs();
@@ -78,6 +79,17 @@ function initializeApp() {
     } catch (error) {
         console.error('초기화 중 오류 발생:', error);
     }
+}
+
+// 패널 토글 설정 함수
+function setupPanelToggle() {
+    const btn = document.getElementById('panelToggle');
+    const editorPanel = document.querySelector('.editor-panel');
+    if (!btn || !editorPanel) return;
+
+    btn.addEventListener('click', function () {
+        editorPanel.classList.toggle('panel-collapsed');
+    });
 }
 
 // 탭 네비게이션 설정 함수
@@ -104,7 +116,13 @@ function setupTabs() {
                 targetContent.classList.add('active');
             }
 
-            // 5. 모바일에서 프리뷰가 열려있으면 닫기
+            // 5. 패널이 닫혀있으면 열기
+            const editorPanel = document.querySelector('.editor-panel');
+            if (editorPanel && editorPanel.classList.contains('panel-collapsed')) {
+                editorPanel.classList.remove('panel-collapsed');
+            }
+
+            // 6. 모바일에서 프리뷰가 열려있으면 닫기
             const previewPanel = document.querySelector('.preview-panel');
             if (previewPanel && previewPanel.classList.contains('mobile-visible')) {
                 previewPanel.classList.remove('mobile-visible');

@@ -264,6 +264,11 @@ body {
 }
 
 /* 2. 에디터 패널 */
+.editor-panel-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
 .editor-panel {
     width: 34vw;
     min-width: 480px;
@@ -273,9 +278,51 @@ body {
     flex-direction: column;
     position: relative;
     flex-shrink: 0;
+    overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     /* 모바일에서 동적 뷰포트 높이 사용 */
     height: 100vh;
     height: 100dvh;
+}
+
+.editor-panel.panel-collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+}
+
+.panel-toggle-btn {
+    position: absolute;
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 60px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    color: var(--text-muted);
+    transition: background 0.2s, color 0.2s;
+}
+
+.panel-toggle-btn:hover {
+    background: var(--bg-hover, var(--bg-input));
+    color: var(--accent-blue);
+}
+
+.panel-toggle-btn .panel-toggle-icon {
+    width: 13px;
+    height: 13px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-panel.panel-collapsed + .panel-toggle-btn .panel-toggle-icon {
+    transform: rotate(180deg);
 }
 
 .panel-header {
@@ -2702,6 +2749,10 @@ body.light-mode .btn-save-new-preset {
 
     /* 프리뷰 패널 - 모바일에서 숨김 또는 토글 가능하게 */
     .preview-panel {
+        display: none;
+    }
+
+    .panel-toggle-btn {
         display: none;
     }
 

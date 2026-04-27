@@ -29,6 +29,7 @@
         </nav>
 
         <!-- 에디터 패널 (챕터 목록) -->
+        <div class="editor-panel-wrapper">
         <div class="editor-panel">
             <header class="panel-header">
                 <h1>InkLog</h1>
@@ -84,6 +85,12 @@
                 <div id="chapterList" class="cards-list"></div>
                 <button id="addArchive" class="btn-accent full-width" style="margin-top: 16px;">+ NEW ARCHIVE</button>
             </div>
+        </div>
+        <button class="panel-toggle-btn" id="panelToggle" title="패널 열기/닫기">
+            <svg class="panel-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
         </div>
 
         <!-- 미리보기 패널 (리더) -->
