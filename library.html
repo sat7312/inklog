@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Chapter Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="library-shell">
+        <header class="library-header">
+            <div>
+                <h1>Chapter Library</h1>
+                <p>저장된 작품을 선택해 읽습니다.</p>
+            </div>
+            <div class="library-actions">
+                <button id="backToEditor" class="btn-ghost">편집기로 돌아가기</button>
+            </div>
+        </header>
+
+        <main class="library-layout">
+            <aside class="library-sidebar">
+                <div class="section-title">
+                    <h2>Works</h2>
+                    <span class="deco-line"></span>
+                </div>
+                <div id="chapterList" class="cards-list"></div>
+            </aside>
+
+            <section class="library-reader">
+                <div class="preview-header">
+                    <h2 id="readerTitle">Reader</h2>
+                    <div class="preview-deco"></div>
+                </div>
+                <div id="readerContent" class="preview-content library-reader-content"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="notification" class="notification"></div>
+    <script src="library.js"></script>
+</body>
+
+</html>

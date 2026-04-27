@@ -1047,6 +1047,7 @@ button {
 /* 닫기 버튼 통일 (.close와 .close-section 모두 적용) */
 .close,
 .close-section,
+.close-character,
 .close-credit {
     font-size: 28px;
     width: 28px;
@@ -1064,6 +1065,7 @@ button {
 
 .close:hover,
 .close-section:hover,
+.close-character:hover,
 .close-credit:hover {
     color: var(--modal-close-hover);
     background: var(--accent-blue-dim);
@@ -1314,6 +1316,90 @@ input[type="color"] {
     opacity: 1;
 }
 
+.library-shell {
+    min-height: 100vh;
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-serif);
+    padding: 28px;
+}
+
+.library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 1440px;
+    margin: 0 auto 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.library-header h1 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--panel-header-h1);
+    margin-bottom: 4px;
+}
+
+.library-header p {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.library-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.library-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+    gap: 24px;
+    max-width: 1440px;
+    margin: 0 auto;
+    height: calc(100vh - 130px);
+}
+
+.library-sidebar,
+.library-reader {
+    min-height: 0;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.library-sidebar {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.library-reader {
+    display: flex;
+    flex-direction: column;
+}
+
+.library-reader-content {
+    flex: 1;
+    padding: 24px;
+}
+
+.library-empty-reader {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 80px 20px;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+}
+
+.selected-chapter {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 1px var(--accent-blue-dim);
+}
+
 /* 미디어 쿼리 */
 @media (max-width: 1024px) {
     .editor-panel {
@@ -1322,6 +1408,30 @@ input[type="color"] {
 }
 
 @media (max-width: 768px) {
+    .library-shell {
+        padding: 16px;
+    }
+
+    .library-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .library-layout {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+    }
+
+    .library-sidebar,
+    .library-reader {
+        overflow: visible;
+    }
+
+    .library-reader {
+        min-height: 70vh;
+    }
+
     .app-container {
         flex-direction: column;
         /* Safe Area를 고려한 높이 설정 */
@@ -2386,7 +2496,8 @@ body.light-mode .btn-save-new-preset {
 
     /* 닫기 버튼 크기 */
     .close,
-    .close-section {
+    .close-section,
+    .close-character {
         font-size: 24px;
         width: 24px;
         height: 24px;
@@ -2858,6 +2969,7 @@ body.light-mode .btn-save-new-preset {
     /* 닫기 버튼 크기 조정 */
     .close,
     .close-section,
+    .close-character,
     .close-credit {
         font-size: 24px;
         width: 24px;
