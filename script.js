@@ -2755,11 +2755,15 @@ function getPreviewData() {
 
 function updatePreview() {
     const activeTab = document.querySelector('.tab-content.active');
-    const ctx = activeTab && activeTab.id === 'tab-pages'
-        ? Object.assign({}, collectEditorData(), { enableTopSection: false, enableComment: false })
-        : getPreviewData();
     const preview = document.getElementById('preview');
-    preview.innerHTML = generateHTML(ctx, true);
+    if (activeTab && activeTab.id === 'tab-description') {
+        preview.innerHTML = generateIntroHTML(collectEditorData());
+    } else if (activeTab && activeTab.id === 'tab-pages') {
+        const ctx = Object.assign({}, collectEditorData(), { enableTopSection: false, enableComment: false });
+        preview.innerHTML = generateHTML(ctx, true);
+    } else {
+        preview.innerHTML = generateHTML(getPreviewData(), true);
+    }
 }
 
 async function copyToClipboard() {
