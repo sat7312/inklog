@@ -870,7 +870,6 @@ function generateHTML(ctx, isPreview) {
     const enableTopSection = ctx.enableTopSection;
     const enableProfiles = ctx.enableProfiles;
     const enableTags = ctx.enableTags;
-    const introText = ctx.introText || '';
     const summaryText = ctx.summaryText || '';
     const enableCover = ctx.enableCover;
     const coverImageUrl = enableCover ? normalizeImageUrl(ctx.coverImage) : '';
@@ -903,7 +902,7 @@ function generateHTML(ctx, isPreview) {
         const coverTitle = ctx.coverTitle || '';
         const coverSubtitle = ctx.coverSubtitle || '';
         const soundtrackUrlCheck = ctx.soundtrackUrl || '';
-        const hasRealContent = (enableProfiles && ctx.profiles.length > 0) || introText.trim() || summaryText.trim() || (soundtrackUrlCheck && soundtrackUrlCheck.trim());
+        const hasRealContent = (enableProfiles && ctx.profiles.length > 0) || summaryText.trim() || (soundtrackUrlCheck && soundtrackUrlCheck.trim());
         const hasCommentSection = ctx.enableComment && ctx.commentText && ctx.commentText.trim();
         const isIntroLastContainer = ctx.pages.length === 0 && !hasCommentSection;
 
@@ -1024,21 +1023,13 @@ function generateHTML(ctx, isPreview) {
             topContent += '</div></div>';
         }
 
-        if (introText.trim()) {
-            const hasCoverContent = coverImage || coverArchiveNo || coverTitle || coverSubtitle;
-            const needTopPadding = !hasCoverContent && (!enableProfiles || ctx.profiles.length === 0);
-            const topPadding = needTopPadding ? '30px' : '10px';
-            topContent += '<div style="padding: ' + topPadding + ' clamp(30px, 5vw, 50px) 10px clamp(30px, 5vw, 50px);">' + parseText(introText, theme, true, true, 100, ctx) + '</div>';
-        }
-
         if (summaryText.trim()) {
             const hasCoverContent = coverImage || coverArchiveNo || coverTitle || coverSubtitle;
-            const needTopPadding = !hasCoverContent && (!enableProfiles || ctx.profiles.length === 0) && !introText.trim();
+            const needTopPadding = !hasCoverContent && (!enableProfiles || ctx.profiles.length === 0);
             const topPadding = needTopPadding ? '30px' : '20px';
             if (!enableProfiles || ctx.profiles.length === 0) {
                 topContent += '<div style="padding-top: ' + topPadding + ';"></div>';
             }
-            if (introText.trim()) topContent += '<br>';
             topContent += '<div style="padding: 0 clamp(20px, 3vw, 25px) 5px clamp(20px, 3vw, 25px); text-align: center;">';
             topContent += '<span style="display: inline-block; font-size: clamp(11px, 2vw, 13px); font-weight: 600; letter-spacing: clamp(1.5px, 0.3vw, 2px); color: ' + theme.headerText + '; text-transform: uppercase; border-bottom: 1px solid ' + theme.headerText + '; padding-bottom: 5px; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">Story So Far</span>';
             topContent += '</div>';

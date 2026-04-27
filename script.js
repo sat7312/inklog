@@ -166,7 +166,6 @@ function loadFromStorage() {
             const coverFocusXValue = document.getElementById('coverFocusXValue');
             const coverFocusYValue = document.getElementById('coverFocusYValue');
             const enableProfilesEl = document.getElementById('enableProfiles');
-            const introText = document.getElementById('introText');
             const summaryText = document.getElementById('summaryText');
             const enableCommentEl = document.getElementById('enableComment');
             const commentText = document.getElementById('commentText');
@@ -179,7 +178,6 @@ function loadFromStorage() {
             if (coverFocusYValue) coverFocusYValue.textContent = (data.coverFocusY || 28) + '%';
 
             if (enableProfilesEl) enableProfilesEl.checked = data.enableProfiles || false;
-            if (introText) introText.value = data.introText || '';
             if (summaryText) summaryText.value = data.summaryText || '';
             if (enableCommentEl) enableCommentEl.checked = data.enableComment || false;
             if (commentText) commentText.value = data.commentText || '';
@@ -472,10 +470,8 @@ function loadDefaultSettings() {
         }
     ];
 
-    // 인트로/요약 텍스트
-    const introText = document.getElementById('introText');
+    // 요약 텍스트
     const summaryText = document.getElementById('summaryText');
-    if (introText) introText.value = '';
     if (summaryText) summaryText.value = '';
 
     // 태그 활성화
@@ -640,7 +636,6 @@ function collectEditorData(extraData) {
         coverTitle: getInputValue('coverTitle'),
         coverSubtitle: getInputValue('coverSubtitle'),
         enableProfiles: getCheckedValue('enableProfiles'),
-        introText: getInputValue('introText'),
         summaryText: getInputValue('summaryText'),
         enableComment: getCheckedValue('enableComment'),
         commentText: getInputValue('commentText'),
@@ -686,7 +681,7 @@ function saveToStorage() {
 }
 
 function setupEventListeners() {
-    const inputIds = ['introText', 'summaryText', 'topBgImage', 'coverImage', 'coverArchiveNo', 'coverTitle', 'coverSubtitle', 'commentText', 'commentNickname'];
+    const inputIds = ['summaryText', 'topBgImage', 'coverImage', 'coverArchiveNo', 'coverTitle', 'coverSubtitle', 'commentText', 'commentNickname'];
     inputIds.forEach(function (id) {
         const el = document.getElementById(id);
         if (el) {
@@ -1571,7 +1566,7 @@ function resetCurrentData() {
     // ── 텍스트 입력 초기화 ──
     const textInputIds = [
         'coverImage', 'coverTitle', 'coverSubtitle',
-        'introText', 'summaryText',
+        'summaryText',
         'commentText', 'commentNickname'
     ];
     textInputIds.forEach(id => {
@@ -1729,7 +1724,6 @@ function importDataFromJSON(file) {
                 document.getElementById('enableProfiles').checked = data.enableProfiles;
                 document.getElementById('profileInputs').style.display = data.enableProfiles ? 'block' : 'none';
             }
-            if (data.introText !== undefined) document.getElementById('introText').value = data.introText;
             if (data.summaryText !== undefined) document.getElementById('summaryText').value = data.summaryText;
             
             if (data.enableComment !== undefined) {
@@ -3026,7 +3020,6 @@ function loadPreset(slotIndex) {
             document.getElementById('enableProfiles').checked = data.enableProfiles;
             document.getElementById('profileInputs').style.display = data.enableProfiles ? 'block' : 'none';
         }
-        if (data.introText !== undefined) document.getElementById('introText').value = data.introText;
         if (data.summaryText !== undefined) document.getElementById('summaryText').value = data.summaryText;
         
         if (data.enableComment !== undefined) {
