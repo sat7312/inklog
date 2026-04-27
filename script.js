@@ -1603,14 +1603,14 @@ function setupEventListeners() {
     const openChapterLibraryBtn = document.getElementById('openChapterLibrary');
     if (openChapterLibraryBtn) {
         openChapterLibraryBtn.addEventListener('click', function () {
-            window.location.href = 'library.html';
+            window.location.href = 'index.html';
         });
     }
 
     const quickOpenLibraryBtn = document.getElementById('quickOpenLibrary');
     if (quickOpenLibraryBtn) {
         quickOpenLibraryBtn.addEventListener('click', function () {
-            window.location.href = 'library.html';
+            window.location.href = 'index.html';
         });
     }
 }

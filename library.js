@@ -17,7 +17,7 @@ function setupLibraryControls() {
     const openEditor = document.getElementById('openEditor');
     if (openEditor) {
         openEditor.addEventListener('click', function () {
-            window.location.href = 'index.html';
+            window.location.href = 'editor.html';
         });
     }
 
@@ -25,7 +25,7 @@ function setupLibraryControls() {
     if (addArchiveBtn) {
         addArchiveBtn.addEventListener('click', function () {
             localStorage.removeItem(EDITING_CHAPTER_KEY);
-            window.location.href = 'index.html';
+            window.location.href = 'editor.html';
         });
     }
 
@@ -222,5 +222,5 @@ function editChapter(id) {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(chapter.data));
     localStorage.setItem(EDITING_CHAPTER_KEY, id);
-    window.location.href = 'index.html';
+    window.location.href = 'editor.html';
 }
