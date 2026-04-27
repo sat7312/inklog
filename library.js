@@ -1,5 +1,6 @@
 const CHAPTER_LIBRARY_STORAGE_KEY = 'rpLogChapterLibrary';
 const STORAGE_KEY = 'rpLogEditorData';
+const EDITING_CHAPTER_KEY = 'rpLogEditingChapterId';
 const THEME_KEY = 'owb_ui_theme';
 
 let chapters = [];
@@ -11,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
     setupLibraryControls();
     loadChapters();
     renderChapterList();
-    selectFirstChapter();
 });
 
 function applySavedTheme() {
@@ -35,6 +35,33 @@ function applyTheme(mode) {
 }
 
 function setupLibraryControls() {
+    const openEditor = document.getElementById('openEditor');
+    if (openEditor) {
+        openEditor.addEventListener('click', function () {
+            window.location.href = 'index.html';
+        });
+    }
+
+    const addArchiveBtn = document.getElementById('addArchive');
+    if (addArchiveBtn) {
+        addArchiveBtn.addEventListener('click', function () {
+            localStorage.removeItem(EDITING_CHAPTER_KEY);
+            window.location.href = 'index.html';
+        });
+    }
+
+    const togglePreviewBtn = document.getElementById('togglePreview');
+    const previewPanel = document.querySelector('.preview-panel');
+    const iconEye = document.getElementById('icon-preview-eye');
+    const iconEdit = document.getElementById('icon-preview-edit');
+    if (togglePreviewBtn && previewPanel) {
+        togglePreviewBtn.addEventListener('click', function () {
+            const isVisible = previewPanel.classList.toggle('mobile-visible');
+            if (iconEye) iconEye.style.display = isVisible ? 'none' : 'block';
+            if (iconEdit) iconEdit.style.display = isVisible ? 'block' : 'none';
+        });
+    }
+
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.addEventListener('click', function () {
@@ -274,6 +301,7 @@ function editChapter(id) {
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(chapter.data));
+    localStorage.setItem(EDITING_CHAPTER_KEY, id);
     window.location.href = 'index.html';
 }
 

@@ -57,6 +57,7 @@ function getFontFallback(font) {
 const STORAGE_KEY = 'rpLogEditorData';
 const PRESET_STORAGE_KEY = 'rpLogEditorPresets';
 const CHAPTER_LIBRARY_STORAGE_KEY = 'rpLogChapterLibrary';
+const EDITING_CHAPTER_KEY = 'rpLogEditingChapterId';
 
 // 스타일 상수
 const STYLES = {
@@ -2030,28 +2031,46 @@ function saveChapterToLibrary() {
     try {
         const saved = localStorage.getItem(CHAPTER_LIBRARY_STORAGE_KEY);
         const chapters = saved ? JSON.parse(saved) : [];
-        const defaultTitle = getInputValue('coverTitle') || getInputValue('pageTitle') || 'Untitled Chapter';
-        const title = prompt('저장할 챕터 제목을 입력하세요:', defaultTitle);
+        const editingId = localStorage.getItem(EDITING_CHAPTER_KEY);
+        const existingChapter = editingId ? chapters.find(function (c) { return c.id === editingId; }) : null;
 
+        const defaultTitle = existingChapter
+            ? existingChapter.title
+            : (getInputValue('coverTitle') || getInputValue('pageTitle') || 'Untitled Chapter');
+        const title = prompt('저장할 챕터 제목을 입력하세요:', defaultTitle);
         if (title === null || title.trim() === '') return;
 
         const now = new Date().toISOString();
-        const chapter = {
-            id: 'chapter_' + Date.now(),
-            title: title.trim(),
-            subtitle: getInputValue('coverSubtitle'),
-            summary: getInputValue('summaryText'),
-            coverImage: getInputValue('coverImage'),
-            descriptionHtml: generateIntroPreviewHTML(),
-            html: generateHTML(false),
-            data: collectEditorData(),
-            createdAt: now,
-            updatedAt: now
-        };
 
-        chapters.unshift(chapter);
-        localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
-        showNotification('챕터가 작품 선택 페이지에 저장되었습니다.');
+        if (existingChapter) {
+            existingChapter.title = title.trim();
+            existingChapter.subtitle = getInputValue('coverSubtitle');
+            existingChapter.summary = getInputValue('summaryText');
+            existingChapter.coverImage = getInputValue('coverImage');
+            existingChapter.descriptionHtml = generateIntroPreviewHTML();
+            existingChapter.html = generateHTML(false);
+            existingChapter.data = collectEditorData();
+            existingChapter.updatedAt = now;
+            localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
+            showNotification('작품이 업데이트되었습니다.');
+        } else {
+            const chapter = {
+                id: 'chapter_' + Date.now(),
+                title: title.trim(),
+                subtitle: getInputValue('coverSubtitle'),
+                summary: getInputValue('summaryText'),
+                coverImage: getInputValue('coverImage'),
+                descriptionHtml: generateIntroPreviewHTML(),
+                html: generateHTML(false),
+                data: collectEditorData(),
+                createdAt: now,
+                updatedAt: now
+            };
+            chapters.unshift(chapter);
+            localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
+            localStorage.setItem(EDITING_CHAPTER_KEY, chapter.id);
+            showNotification('챕터가 작품 선택 페이지에 저장되었습니다.');
+        }
     } catch (error) {
         console.error('Chapter save failed:', error);
         showNotification('챕터 저장 실패: ' + error.message);
