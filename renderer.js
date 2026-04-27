@@ -209,10 +209,22 @@ function escapeRegExp(string) {
 function normalizeImageUrl(url) {
     if (!url || !url.trim()) return '';
     const trimmed = url.trim();
+    if (trimmed.startsWith('local:')) {
+        return trimmed;
+    }
     if (trimmed.startsWith('//')) {
         return 'https:' + trimmed;
     }
     return trimmed;
+}
+
+function resolveImageUrl(url, ctx) {
+    const normalized = normalizeImageUrl(url);
+    if (normalized.startsWith('local:')) {
+        const id = normalized.slice('local:'.length);
+        return (ctx && ctx.localImages && ctx.localImages[id] && ctx.localImages[id].dataUrl) || '';
+    }
+    return normalized;
 }
 
 function hexToRgb(hex) {
@@ -436,15 +448,17 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
         if (line.includes('[IMG:')) {
             const imgMatch = line.match(/\[IMG:([^\]]+)\]/);
             if (imgMatch) {
-                const imgParts = imgMatch[1].split(':');
-                const imageUrl = normalizeImageUrl(imgParts[0]);
+                const imgValue = imgMatch[1].trim();
+                const widthMatch = imgValue.match(/:(\d+)$/);
+                const imageSource = widthMatch ? imgValue.slice(0, -widthMatch[0].length) : imgValue;
+                const imageUrl = resolveImageUrl(imageSource, ctx);
                 let individualWidth = imgWidth;
-                if (imgParts.length > 1 && !isNaN(parseInt(imgParts[1]))) {
-                    individualWidth = Math.max(30, Math.min(100, parseInt(imgParts[1])));
+                if (widthMatch) {
+                    individualWidth = Math.max(30, Math.min(100, parseInt(widthMatch[1])));
                 }
                 if (imageUrl) {
                     const imgStyle = 'max-width: ' + individualWidth + '%; height: auto; border-radius: 15px; display: block; margin: 0 auto;';
-                    const originalUrl = imgParts[0].trim();
+                    const originalUrl = imageSource.trim();
                     const needsProxy = originalUrl.includes('namu.la') || originalUrl.includes('arca.live');
                     if (needsProxy) {
                         const proxies = [
@@ -717,7 +731,8 @@ function createHeader(text, themeStyle, headerImage, headerFocusX, headerFocusY,
     if (hasHeaderImage) {
         const focusX = headerFocusX || 50;
         const focusY = headerFocusY || 50;
-        const bannerStyle = 'width: calc(100% + clamp(30px, 6vw, 60px)); margin: 0 -' + 'clamp(15px, 3vw, 30px)' + '; height: 100px; background: url(\'' + headerImage + '\') ' + focusX + '% ' + focusY + '% / cover no-repeat; margin-bottom: 20px; margin-top: -20px;';
+        const normalizedHeaderImage = resolveImageUrl(headerImage, ctx);
+        const bannerStyle = 'width: calc(100% + clamp(30px, 6vw, 60px)); margin: 0 -' + 'clamp(15px, 3vw, 30px)' + '; height: 100px; background: url(\'' + normalizedHeaderImage + '\') ' + focusX + '% ' + focusY + '% / cover no-repeat; margin-bottom: 20px; margin-top: -20px;';
         headerHtml += '<div style="' + bannerStyle + '"></div>';
     }
 
@@ -816,7 +831,7 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
     let containerStyle = 'box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width: 900px; margin: 5px auto; border-radius: 1rem; background-color: ' + theme.bg + '; padding: ' + topPadding + ' 0 ' + bottomPadding + ' 0; ' + overflowStyle + 'font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; font-size: clamp(13px, 2.3vw, 14.2px);';
 
     if (bgImage) {
-        const normalizedBgImage = normalizeImageUrl(bgImage);
+        const normalizedBgImage = resolveImageUrl(bgImage, ctx);
         const rgb = hexToRgb(theme.bg);
         containerStyle = 'box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width: 900px; margin: 5px auto; padding: clamp(15px, 3vw, 30px); border-radius: 1rem; background-image: url(\'' + normalizedBgImage + '\'); background-size: cover; background-position: center; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; font-size: clamp(13px, 2.3vw, 14.2px);';
 
@@ -872,7 +887,7 @@ function generateHTML(ctx, isPreview) {
     const enableTags = ctx.enableTags;
     const summaryText = ctx.summaryText || '';
     const enableCover = ctx.enableCover;
-    const coverImageUrl = enableCover ? normalizeImageUrl(ctx.coverImage) : '';
+    const coverImageUrl = enableCover ? resolveImageUrl(ctx.coverImage, ctx) : '';
 
     if (enableCover && coverImageUrl) {
         const originalCoverUrl = (ctx.coverImage || '').trim();
@@ -915,7 +930,7 @@ function generateHTML(ctx, isPreview) {
 
             if (hasCoverContent) {
                 if (coverImage) {
-                    const normalizedCoverImage = normalizeImageUrl(coverImage);
+                    const normalizedCoverImage = resolveImageUrl(coverImage, ctx);
                     const backgroundSize = coverAutoFit ? 'cover' : (coverZoom + '% auto');
                     const coverWrapperMarginBottom = hasRealContent ? '30px' : '0';
                     const coverImgBorderRadius = hasRealContent ? '10px 10px 0 0' : '10px 10px 10px 10px';
@@ -998,7 +1013,7 @@ function generateHTML(ctx, isPreview) {
 
             topContent += '<div style="' + profileRowStyle + '">';
             ctx.profiles.forEach(function (profile) {
-                const profileImageUrl = normalizeImageUrl(profile.imageUrl || '');
+                const profileImageUrl = resolveImageUrl(profile.imageUrl || '', ctx);
                 const hasImage = profileImageUrl.trim() !== '';
                 const hasContent = (profile.name && profile.name.trim()) || (profile.desc && profile.desc.trim());
                 if (hasContent) {
@@ -1091,7 +1106,7 @@ function generateHTML(ctx, isPreview) {
                 const focusX = item.focusX || 50;
                 const focusY = item.focusY || 50;
                 const textAlign = item.align || 'center';
-                const sectionImage = normalizeImageUrl(item.image);
+                const sectionImage = resolveImageUrl(item.image, ctx);
                 const sectionMarginBottom = isInSection ? 'margin-bottom:20px;' : '';
                 const sectionBorderRadius = isInSection ? 'border-radius:10px 10px 0 0;' : 'border-radius:10px;';
 

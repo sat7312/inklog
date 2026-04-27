@@ -12,6 +12,7 @@ let enablePageFold = true;
 let showHeaderWhenFoldOff = false;
 let dividerStyle = 'line';
 let dividerCustomText = '';
+let localImages = {};
 
 let textSpacing = {
     fontSize: 14.2,
@@ -123,6 +124,8 @@ function loadFromStorage() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             const data = JSON.parse(saved);
+            localImages = data.localImages || {};
+            data.coverImage = migrateLocalImageValue(data.coverImage);
 
             // null 체크를 추가한 안전한 요소 설정
             const useRoundedQuotes = document.getElementById('useRoundedQuotes');
@@ -205,6 +208,18 @@ function loadFromStorage() {
             pages = pages.map(function (item) {
                 if (!item.itemType) {
                     item.itemType = 'page';
+                }
+                if (item.content) {
+                    item.content = migrateLocalImagesInText(item.content);
+                }
+                if (item.image) {
+                    item.image = migrateLocalImageValue(item.image);
+                }
+                if (item.bgImage) {
+                    item.bgImage = migrateLocalImageValue(item.bgImage);
+                }
+                if (item.headerImage) {
+                    item.headerImage = migrateLocalImageValue(item.headerImage);
                 }
                 // imageWidth가 없는 페이지는 기본값 100으로 설정
                 if (item.itemType === 'page' && (item.imageWidth === undefined || item.imageWidth === null)) {
@@ -347,6 +362,10 @@ function loadFromStorage() {
 
             if (data.profiles && data.profiles.length > 0) {
                 profiles = JSON.parse(JSON.stringify(data.profiles));
+                profiles = profiles.map(function (profile) {
+                    profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
+                    return profile;
+                });
             } else {
                 if (data.userName || data.charName) {
                     profiles = [
@@ -609,6 +628,103 @@ function getIntInputValue(id, defaultValue) {
     return Number.isNaN(value) ? defaultValue : value;
 }
 
+function readFileAsDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(reader.result); };
+        reader.onerror = function () { reject(reader.error || new Error('이미지를 읽을 수 없습니다.')); };
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageFromDataUrl(dataUrl) {
+    return new Promise(function (resolve, reject) {
+        const image = new Image();
+        image.onload = function () { resolve(image); };
+        image.onerror = function () { reject(new Error('이미지를 불러올 수 없습니다.')); };
+        image.src = dataUrl;
+    });
+}
+
+async function prepareLocalImage(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+        throw new Error('이미지 파일을 선택해주세요.');
+    }
+
+    const dataUrl = await readFileAsDataUrl(file);
+    if (file.type === 'image/gif' || file.type === 'image/svg+xml') {
+        return dataUrl;
+    }
+
+    const image = await loadImageFromDataUrl(dataUrl);
+    const maxSize = 1600;
+    const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0, width, height);
+
+    return canvas.toDataURL('image/jpeg', 0.86);
+}
+
+function selectLocalImage(onSelect) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', async function () {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        try {
+            const dataUrl = await prepareLocalImage(file);
+            onSelect(dataUrl, file);
+        } catch (error) {
+            showNotification(error.message);
+        }
+    });
+    input.click();
+}
+
+function insertAtCursor(textarea, value) {
+    if (!textarea) return;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || start;
+    const text = textarea.value;
+    textarea.value = text.slice(0, start) + value + text.slice(end);
+    const nextPos = start + value.length;
+    textarea.focus();
+    textarea.setSelectionRange(nextPos, nextPos);
+}
+
+function createLocalImageRef(dataUrl, file) {
+    const id = 'local_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    localImages[id] = {
+        dataUrl: dataUrl,
+        name: file && file.name ? file.name : '',
+        createdAt: new Date().toISOString()
+    };
+    return 'local:' + id;
+}
+
+function migrateLocalImageValue(value) {
+    if (typeof value === 'string' && value.startsWith('data:image/')) {
+        return createLocalImageRef(value);
+    }
+    return value;
+}
+
+function migrateLocalImagesInText(text) {
+    if (typeof text !== 'string' || !text.includes('[IMG:data:image/')) {
+        return text;
+    }
+    return text.replace(/\[IMG:(data:image\/[^\]]+?)\]/g, function (match, dataUrl) {
+        return '[IMG:' + createLocalImageRef(dataUrl) + ']';
+    });
+}
+
 function getProfileCharacters() {
     return profiles.map(function (profile) {
         return {
@@ -658,6 +774,7 @@ function collectEditorData(extraData) {
         replacements: replacements,
         customThemes: customThemes,
         profiles: profiles,
+        localImages: localImages,
         characters: getProfileCharacters(),
         textSpacing: textSpacing,
         fontFamily: fontFamily,
@@ -691,6 +808,20 @@ function setupEventListeners() {
             });
         }
     });
+
+    const selectCoverImageFile = document.getElementById('selectCoverImageFile');
+    if (selectCoverImageFile) {
+        selectCoverImageFile.addEventListener('click', function () {
+            selectLocalImage(function (dataUrl, file) {
+                const imageRef = createLocalImageRef(dataUrl, file);
+                const coverImage = document.getElementById('coverImage');
+                if (coverImage) coverImage.value = imageRef;
+                updatePreview();
+                saveToStorage();
+                showNotification('로컬 표지 이미지가 추가되었습니다.');
+            });
+        });
+    }
 
     // 표지 Focus 슬라이더 이벤트
     const coverZoom = document.getElementById('coverZoom');
@@ -1021,6 +1152,18 @@ function setupEventListeners() {
         });
     }
 
+    const selectSectionImageFile = document.getElementById('selectSectionImageFile');
+    if (selectSectionImageFile) {
+        selectSectionImageFile.addEventListener('click', function () {
+            selectLocalImage(function (dataUrl, file) {
+                const imageRef = createLocalImageRef(dataUrl, file);
+                const sectionImage = document.getElementById('sectionImage');
+                if (sectionImage) sectionImage.value = imageRef;
+                showNotification('로컬 섹션 이미지가 추가되었습니다.');
+            });
+        });
+    }
+
     // 전역 이미지 크기 슬라이더 이벤트
     const defaultImageWidth = document.getElementById('defaultImageWidth');
     if (defaultImageWidth) {
@@ -1038,14 +1181,24 @@ function setupEventListeners() {
             const url = prompt('이미지 URL을 입력하세요:');
             if (url) {
                 const pageContent = document.getElementById('pageContent');
-                const cursorPos = pageContent.selectionStart;
-                const text = pageContent.value;
-                
-                // 기본적으로 페이지 설정을 사용하는 이미지 태그 삽입
-                let imgTag = '[IMG:' + url + ']';
-                
-                pageContent.value = text.slice(0, cursorPos) + imgTag + text.slice(cursorPos);
+                insertAtCursor(pageContent, '[IMG:' + url + ']');
+                updatePageStats();
+                updatePreview();
             }
+        });
+    }
+
+    const insertLocalImage = document.getElementById('insertLocalImage');
+    if (insertLocalImage) {
+        insertLocalImage.addEventListener('click', function () {
+            selectLocalImage(function (dataUrl, file) {
+                const imageRef = createLocalImageRef(dataUrl, file);
+                const pageContent = document.getElementById('pageContent');
+                insertAtCursor(pageContent, '[IMG:' + imageRef + ']');
+                updatePageStats();
+                updatePreview();
+                showNotification('로컬 이미지가 본문에 추가되었습니다.');
+            });
         });
     }
 
@@ -1522,6 +1675,7 @@ function resetCurrentData() {
     tags = [];
     replacements = [];
     profiles = [];
+    localImages = {};
     currentEditingIndex = null;
     tempPageTags = [];
     globalTheme = 'basic';
@@ -1752,12 +1906,27 @@ function importDataFromJSON(file) {
                 setColorInputValue('customDivider', data.customColors.divider);
             }
 
+            localImages = data.localImages || {};
+
             // 배열 데이터 복원
-            if (data.pages) pages = data.pages;
+            if (data.pages) {
+                pages = data.pages.map(function (item) {
+                    if (item.content) item.content = migrateLocalImagesInText(item.content);
+                    if (item.image) item.image = migrateLocalImageValue(item.image);
+                    if (item.bgImage) item.bgImage = migrateLocalImageValue(item.bgImage);
+                    if (item.headerImage) item.headerImage = migrateLocalImageValue(item.headerImage);
+                    return item;
+                });
+            }
             if (data.tags) tags = data.tags;
             if (data.replacements) replacements = data.replacements;
             if (data.customThemes) customThemes = data.customThemes;
-            if (data.profiles) profiles = data.profiles;
+            if (data.profiles) {
+                profiles = data.profiles.map(function (profile) {
+                    profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
+                    return profile;
+                });
+            }
 
             // 텍스트 간격 복원
             if (data.textSpacing) {
@@ -1993,6 +2162,7 @@ function updateProfilesList() {
             '</span>' +
             '</label>' +
             '<input type="text" class="profile-image-input" placeholder="https://..." value="' + (profile.imageUrl || '') + '" data-index="' + index + '">' +
+            '<button class="btn-ghost full-width btn-profile-local-image" type="button" data-index="' + index + '">로컬 이미지 선택</button>' +
             '</div>' +
             '<div class="input-group">' +
             '<label>Zoom <span id="' + zoomValueId + '" style="color:var(--accent-blue);">' + (profile.zoom || 100) + '%</span></label>' +
@@ -2042,6 +2212,18 @@ function attachProfileEvents(profilesList) {
         input.addEventListener('input', e => {
             profiles[parseInt(e.target.dataset.index)].imageUrl = e.target.value;
             updatePreview(); saveToStorage();
+        });
+    });
+    profilesList.querySelectorAll('.btn-profile-local-image').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const idx = parseInt(e.currentTarget.dataset.index);
+            selectLocalImage(function (dataUrl, file) {
+                profiles[idx].imageUrl = createLocalImageRef(dataUrl, file);
+                updateProfilesList();
+                updatePreview();
+                saveToStorage();
+                showNotification('로컬 프로필 이미지가 추가되었습니다.');
+            });
         });
     });
     profilesList.querySelectorAll('.profile-zoom-input').forEach(input => {
@@ -2302,7 +2484,7 @@ function deleteCustomTheme(index) {
 function savePageData() {
     const pageTitle = document.getElementById('pageTitle').value.trim();
     const pageSubtitle = document.getElementById('pageSubtitle').value.trim();
-    const content = document.getElementById('pageContent').value;
+    const content = migrateLocalImagesInText(document.getElementById('pageContent').value);
     const defaultImageWidthInput = document.getElementById('defaultImageWidth');
     const pageImageWidth = defaultImageWidthInput ? parseInt(defaultImageWidthInput.value) : 100;
 
@@ -3048,9 +3230,18 @@ function loadPreset(slotIndex) {
             setColorInputValue('customDivider', data.customColors.divider);
         }
 
+        localImages = data.localImages ? JSON.parse(JSON.stringify(data.localImages)) : {};
+
         // 배열 데이터 복원
         if (data.pages) {
             pages = JSON.parse(JSON.stringify(data.pages));
+            pages = pages.map(function (item) {
+                if (item.content) item.content = migrateLocalImagesInText(item.content);
+                if (item.image) item.image = migrateLocalImageValue(item.image);
+                if (item.bgImage) item.bgImage = migrateLocalImageValue(item.bgImage);
+                if (item.headerImage) item.headerImage = migrateLocalImageValue(item.headerImage);
+                return item;
+            });
             updatePagesList();
         }
         if (data.tags) {
@@ -3067,6 +3258,10 @@ function loadPreset(slotIndex) {
         }
         if (data.profiles) {
             profiles = JSON.parse(JSON.stringify(data.profiles));
+            profiles = profiles.map(function (profile) {
+                profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
+                return profile;
+            });
             updateProfilesList();
         }
 

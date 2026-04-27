@@ -99,6 +99,7 @@ function renderChapterList() {
             '</div>' +
             '</div>' +
             '<div class="page-controls">' +
+            '<button class="btn-move btn-edit-chapter" data-id="' + chapter.id + '" title="편집">✎</button>' +
             '<button class="btn-delete-page btn-delete-chapter" data-id="' + chapter.id + '" title="삭제">×</button>' +
             '</div>' +
             '</div>';
@@ -110,6 +111,13 @@ function renderChapterList() {
         button.addEventListener('click', function (event) {
             event.stopPropagation();
             deleteChapter(event.target.dataset.id);
+        });
+    });
+
+    chapterList.querySelectorAll('.btn-edit-chapter').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            editChapter(event.target.dataset.id);
         });
     });
 
@@ -132,14 +140,12 @@ function selectChapter(id) {
 function renderDescription(chapter) {
     const title = document.getElementById('readerTitle');
     const content = document.getElementById('readerContent');
-    const editButton = document.getElementById('editSelectedChapter');
     const readButton = document.getElementById('readSelectedChapter');
     if (!title || !content) return;
 
     if (!chapter) {
         title.textContent = 'Description';
         content.innerHTML = '<div class="library-empty-reader">저장된 작품을 선택하면 소개 페이지가 표시됩니다.</div>';
-        if (editButton) editButton.style.display = 'none';
         if (readButton) readButton.style.display = 'none';
         return;
     }
@@ -150,11 +156,6 @@ function renderDescription(chapter) {
         readButton.style.display = 'inline-flex';
         readButton.onclick = function () { renderReader(chapter); };
     }
-    if (editButton) {
-        editButton.style.display = 'inline-flex';
-        editButton.onclick = function () { editChapter(chapter.id); };
-    }
-
     if (chapter.data) {
         content.innerHTML = '<div class="library-intro-description">' + generateIntroHTML(chapter.data) + '</div>';
     } else if (chapter.descriptionHtml) {
@@ -167,23 +168,22 @@ function renderDescription(chapter) {
 function renderReader(chapter) {
     const title = document.getElementById('readerTitle');
     const content = document.getElementById('readerContent');
-    const editButton = document.getElementById('editSelectedChapter');
     const readButton = document.getElementById('readSelectedChapter');
     if (!title || !content || !chapter) return;
 
     title.textContent = chapter.title || 'Reader';
-    if (editButton) {
-        editButton.style.display = 'inline-flex';
-        editButton.onclick = function () { editChapter(chapter.id); };
-    }
     if (readButton) {
         readButton.textContent = '작품 소개';
         readButton.style.display = 'inline-flex';
         readButton.onclick = function () { renderDescription(chapter); };
     }
 
-    content.innerHTML = chapter.data
-        ? generateHTML(chapter.data, true)
+    const readerData = chapter.data
+        ? Object.assign({}, chapter.data, { enableTopSection: false, enableComment: false })
+        : null;
+
+    content.innerHTML = readerData
+        ? generateHTML(readerData, true)
         : (chapter.html || '<div class="library-empty-reader">읽을 본문이 없습니다.</div>');
 }
 
