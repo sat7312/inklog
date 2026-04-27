@@ -127,7 +127,6 @@ function loadFromStorage() {
             // null 체크를 추가한 안전한 요소 설정
             const useRoundedQuotes = document.getElementById('useRoundedQuotes');
             const useTextIndent = document.getElementById('useTextIndent');
-            const enableTopSection = document.getElementById('enableTopSection');
             const enableCover = document.getElementById('enableCover');
             const coverImage = document.getElementById('coverImage');
             const coverZoom = document.getElementById('coverZoom');
@@ -143,7 +142,6 @@ function loadFromStorage() {
             if (useTextIndent) useTextIndent.checked = data.useTextIndent || false;
             const preserveLineBreaks = document.getElementById('preserveLineBreaks');
             if (preserveLineBreaks) preserveLineBreaks.checked = data.preserveLineBreaks || false;
-            if (enableTopSection) enableTopSection.checked = data.enableTopSection || false;
 
             // 표지 관련 설정 로드
             if (enableCover) enableCover.checked = data.enableCover || false;
@@ -167,13 +165,9 @@ function loadFromStorage() {
             const coverZoomValue = document.getElementById('coverZoomValue');
             const coverFocusXValue = document.getElementById('coverFocusXValue');
             const coverFocusYValue = document.getElementById('coverFocusYValue');
-            const topSectionContent = document.getElementById('topSectionContent');
             const enableProfilesEl = document.getElementById('enableProfiles');
             const introText = document.getElementById('introText');
             const summaryText = document.getElementById('summaryText');
-            const soundtrackUrl = document.getElementById('soundtrackUrl');
-            const soundtrackTitle = document.getElementById('soundtrackTitle');
-            const soundtrackArtist = document.getElementById('soundtrackArtist');
             const enableCommentEl = document.getElementById('enableComment');
             const commentText = document.getElementById('commentText');
             const commentNickname = document.getElementById('commentNickname');
@@ -184,14 +178,9 @@ function loadFromStorage() {
             if (coverFocusXValue) coverFocusXValue.textContent = (data.coverFocusX || 50) + '%';
             if (coverFocusYValue) coverFocusYValue.textContent = (data.coverFocusY || 28) + '%';
 
-            if (topSectionContent) topSectionContent.style.display = data.enableTopSection ? 'block' : 'none';
-
             if (enableProfilesEl) enableProfilesEl.checked = data.enableProfiles || false;
             if (introText) introText.value = data.introText || '';
             if (summaryText) summaryText.value = data.summaryText || '';
-            if (soundtrackUrl) soundtrackUrl.value = data.soundtrackUrl || '';
-            if (soundtrackTitle) soundtrackTitle.value = data.soundtrackTitle || '';
-            if (soundtrackArtist) soundtrackArtist.value = data.soundtrackArtist || '';
             if (enableCommentEl) enableCommentEl.checked = data.enableComment || false;
             if (commentText) commentText.value = data.commentText || '';
             if (commentNickname) commentNickname.value = data.commentNickname || '';
@@ -428,12 +417,6 @@ function loadDefaultSettings() {
     const preserveLineBreaks = document.getElementById('preserveLineBreaks');
     if (preserveLineBreaks) preserveLineBreaks.checked = false;
 
-    // 인트로 섹션 활성화
-    const enableTopSection = document.getElementById('enableTopSection');
-    const topSectionContent = document.getElementById('topSectionContent');
-    if (enableTopSection) enableTopSection.checked = true;
-    if (topSectionContent) topSectionContent.style.display = 'block';
-
     // 표지 설정
     const enableCover = document.getElementById('enableCover');
     const coverImage = document.getElementById('coverImage');
@@ -646,7 +629,7 @@ function collectEditorData(extraData) {
         useRoundedQuotes: getCheckedValue('useRoundedQuotes'),
         useTextIndent: getCheckedValue('useTextIndent'),
         preserveLineBreaks: getCheckedValue('preserveLineBreaks'),
-        enableTopSection: getCheckedValue('enableTopSection'),
+        enableTopSection: true,
         enableCover: getCheckedValue('enableCover'),
         coverImage: getInputValue('coverImage'),
         coverAutoFit: getCheckedValue('coverAutoFit'),
@@ -659,9 +642,6 @@ function collectEditorData(extraData) {
         enableProfiles: getCheckedValue('enableProfiles'),
         introText: getInputValue('introText'),
         summaryText: getInputValue('summaryText'),
-        soundtrackUrl: getInputValue('soundtrackUrl'),
-        soundtrackTitle: getInputValue('soundtrackTitle'),
-        soundtrackArtist: getInputValue('soundtrackArtist'),
         enableComment: getCheckedValue('enableComment'),
         commentText: getInputValue('commentText'),
         commentNickname: getInputValue('commentNickname'),
@@ -706,7 +686,7 @@ function saveToStorage() {
 }
 
 function setupEventListeners() {
-    const inputIds = ['introText', 'summaryText', 'topBgImage', 'coverImage', 'coverArchiveNo', 'coverTitle', 'coverSubtitle', 'soundtrackUrl', 'soundtrackTitle', 'soundtrackArtist', 'commentText', 'commentNickname'];
+    const inputIds = ['introText', 'summaryText', 'topBgImage', 'coverImage', 'coverArchiveNo', 'coverTitle', 'coverSubtitle', 'commentText', 'commentNickname'];
     inputIds.forEach(function (id) {
         const el = document.getElementById(id);
         if (el) {
@@ -856,14 +836,11 @@ function setupEventListeners() {
         });
     }
 
-    const checkboxIds = ['useRoundedQuotes', 'useTextIndent', 'preserveLineBreaks', 'enableTopSection', 'enableProfiles', 'enableTags', 'enableCover', 'enableComment'];
+    const checkboxIds = ['useRoundedQuotes', 'useTextIndent', 'preserveLineBreaks', 'enableProfiles', 'enableTags', 'enableCover', 'enableComment'];
     checkboxIds.forEach(function (id) {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('change', function () {
-                if (id === 'enableTopSection') {
-                    document.getElementById('topSectionContent').style.display = el.checked ? 'block' : 'none';
-                }
                 if (id === 'enableComment') {
                     document.getElementById('commentContent').style.display = el.checked ? 'block' : 'none';
                 }
@@ -1569,7 +1546,7 @@ function resetCurrentData() {
 
     // ── 체크박스 초기화 ──
     const checkboxIds = [
-        'useRoundedQuotes', 'useTextIndent', 'preserveLineBreaks', 'enableTopSection',
+        'useRoundedQuotes', 'useTextIndent', 'preserveLineBreaks',
         'enableCover', 'coverAutoFit', 'enableProfiles',
         'enableTags', 'enableComment', 'hidePageNumbers'
     ];
@@ -1595,7 +1572,6 @@ function resetCurrentData() {
     const textInputIds = [
         'coverImage', 'coverTitle', 'coverSubtitle',
         'introText', 'summaryText',
-        'soundtrackUrl', 'soundtrackTitle', 'soundtrackArtist',
         'commentText', 'commentNickname'
     ];
     textInputIds.forEach(id => {
@@ -1634,9 +1610,7 @@ function resetCurrentData() {
     updateReplacementsList();
     updateProfilesList();
 
-    // 인트로/커버 섹션 숨김
-    const topSectionContent = document.getElementById('topSectionContent');
-    if (topSectionContent) topSectionContent.style.display = 'none';
+    // 커버 섹션 숨김
     const coverContent = document.getElementById('coverContent');
     if (coverContent) coverContent.style.display = 'none';
     const profileInputs = document.getElementById('profileInputs');
@@ -1723,11 +1697,6 @@ function importDataFromJSON(file) {
             if (data.useRoundedQuotes !== undefined) document.getElementById('useRoundedQuotes').checked = data.useRoundedQuotes;
             if (data.useTextIndent !== undefined) document.getElementById('useTextIndent').checked = data.useTextIndent;
             if (data.preserveLineBreaks !== undefined) document.getElementById('preserveLineBreaks').checked = data.preserveLineBreaks;
-            if (data.enableTopSection !== undefined) {
-                document.getElementById('enableTopSection').checked = data.enableTopSection;
-                document.getElementById('topSectionContent').style.display = data.enableTopSection ? 'block' : 'none';
-            }
-            
             if (data.enableCover !== undefined) {
                 document.getElementById('enableCover').checked = data.enableCover;
                 document.getElementById('coverContent').style.display = data.enableCover ? 'block' : 'none';
@@ -1762,9 +1731,6 @@ function importDataFromJSON(file) {
             }
             if (data.introText !== undefined) document.getElementById('introText').value = data.introText;
             if (data.summaryText !== undefined) document.getElementById('summaryText').value = data.summaryText;
-            if (data.soundtrackUrl !== undefined) document.getElementById('soundtrackUrl').value = data.soundtrackUrl;
-            if (data.soundtrackTitle !== undefined) document.getElementById('soundtrackTitle').value = data.soundtrackTitle;
-            if (data.soundtrackArtist !== undefined) document.getElementById('soundtrackArtist').value = data.soundtrackArtist;
             
             if (data.enableComment !== undefined) {
                 document.getElementById('enableComment').checked = data.enableComment;
@@ -3028,11 +2994,6 @@ function loadPreset(slotIndex) {
         // 데이터 복원
         if (data.useRoundedQuotes !== undefined) document.getElementById('useRoundedQuotes').checked = data.useRoundedQuotes;
         if (data.useTextIndent !== undefined) document.getElementById('useTextIndent').checked = data.useTextIndent;
-        if (data.enableTopSection !== undefined) {
-            document.getElementById('enableTopSection').checked = data.enableTopSection;
-            document.getElementById('topSectionContent').style.display = data.enableTopSection ? 'block' : 'none';
-        }
-        
         if (data.enableCover !== undefined) {
             document.getElementById('enableCover').checked = data.enableCover;
             document.getElementById('coverContent').style.display = data.enableCover ? 'block' : 'none';
@@ -3067,9 +3028,6 @@ function loadPreset(slotIndex) {
         }
         if (data.introText !== undefined) document.getElementById('introText').value = data.introText;
         if (data.summaryText !== undefined) document.getElementById('summaryText').value = data.summaryText;
-        if (data.soundtrackUrl !== undefined) document.getElementById('soundtrackUrl').value = data.soundtrackUrl;
-        if (data.soundtrackTitle !== undefined) document.getElementById('soundtrackTitle').value = data.soundtrackTitle;
-        if (data.soundtrackArtist !== undefined) document.getElementById('soundtrackArtist').value = data.soundtrackArtist;
         
         if (data.enableComment !== undefined) {
             document.getElementById('enableComment').checked = data.enableComment;

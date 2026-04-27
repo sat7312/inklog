@@ -1240,7 +1240,6 @@ function generateHTML(ctx, isPreview) {
         }
     }
 
-    html += createCreditFooter();
     return html;
 }
 
