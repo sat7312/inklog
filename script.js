@@ -2006,9 +2006,21 @@ function setupEventListeners() {
         saveChapterBtn.addEventListener('click', saveChapterToLibrary);
     }
 
+    const quickSaveChapterBtn = document.getElementById('quickSaveChapter');
+    if (quickSaveChapterBtn) {
+        quickSaveChapterBtn.addEventListener('click', saveChapterToLibrary);
+    }
+
     const openChapterLibraryBtn = document.getElementById('openChapterLibrary');
     if (openChapterLibraryBtn) {
         openChapterLibraryBtn.addEventListener('click', function () {
+            window.location.href = 'library.html';
+        });
+    }
+
+    const quickOpenLibraryBtn = document.getElementById('quickOpenLibrary');
+    if (quickOpenLibraryBtn) {
+        quickOpenLibraryBtn.addEventListener('click', function () {
             window.location.href = 'library.html';
         });
     }

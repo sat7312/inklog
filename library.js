@@ -1,4 +1,5 @@
 const CHAPTER_LIBRARY_STORAGE_KEY = 'rpLogChapterLibrary';
+const STORAGE_KEY = 'rpLogEditorData';
 const THEME_KEY = 'owb_ui_theme';
 
 let chapters = [];
@@ -8,7 +9,6 @@ let notificationTimer = null;
 document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadChapters();
-    setupLibraryEvents();
     renderChapterList();
     selectFirstChapter();
 });
@@ -17,15 +17,6 @@ function applySavedTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
     if (savedTheme === 'light') {
         document.body.classList.add('light-mode');
-    }
-}
-
-function setupLibraryEvents() {
-    const backToEditor = document.getElementById('backToEditor');
-    if (backToEditor) {
-        backToEditor.addEventListener('click', function () {
-            window.location.href = 'index.html';
-        });
     }
 }
 
@@ -62,7 +53,7 @@ function renderChapterList() {
             '</div>' +
             '</div>';
         chapterList.appendChild(empty);
-        renderReader(null);
+        renderDescription(null);
         return;
     }
 
@@ -78,7 +69,7 @@ function renderChapterList() {
         item.innerHTML =
             '<div class="page-item-header">' +
             '<div class="page-item-main">' +
-            '<span class="page-num">' + (index + 1) + '</span>' +
+            '<span class="library-work-num">' + (index + 1) + '</span>' +
             '<div class="page-item-info">' +
             '<div class="page-item-name">' + escapeHtml(chapter.title || 'Untitled Chapter') + '</div>' +
             '<div class="page-item-preview">' + escapeHtml(preview).replace(/\n/g, ' ').substring(0, 90) + '</div>' +
@@ -86,18 +77,11 @@ function renderChapterList() {
             '</div>' +
             '</div>' +
             '<div class="page-controls">' +
-            '<button class="btn-edit-page btn-read-chapter" data-id="' + chapter.id + '">READ</button>' +
             '<button class="btn-delete-page btn-delete-chapter" data-id="' + chapter.id + '" title="삭제">×</button>' +
             '</div>' +
             '</div>';
 
         chapterList.appendChild(item);
-    });
-
-    chapterList.querySelectorAll('.btn-read-chapter').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            selectChapter(event.target.dataset.id);
-        });
     });
 
     chapterList.querySelectorAll('.btn-delete-chapter').forEach(function (button) {
@@ -125,23 +109,66 @@ function selectChapter(id) {
     const chapter = chapters.find(function (item) {
         return item.id === id;
     });
-    renderReader(chapter);
+    renderDescription(chapter);
     renderChapterList();
 }
 
-function renderReader(chapter) {
+function renderDescription(chapter) {
     const title = document.getElementById('readerTitle');
     const content = document.getElementById('readerContent');
     if (!title || !content) return;
 
     if (!chapter) {
-        title.textContent = 'Reader';
-        content.innerHTML = '<div class="library-empty-reader">저장된 작품을 선택하면 여기에 표시됩니다.</div>';
+        title.textContent = 'Description';
+        content.innerHTML = '<div class="library-empty-reader">저장된 작품을 선택하면 소개 페이지가 표시됩니다.</div>';
         return;
     }
 
-    title.textContent = chapter.title || 'Untitled Chapter';
-    content.innerHTML = chapter.html || '';
+    const data = chapter.data || {};
+    const characters = Array.isArray(data.characters) ? data.characters : [];
+    const pages = Array.isArray(data.pages) ? data.pages : [];
+    const pageCount = pages.filter(function (item) {
+        return !item.itemType || item.itemType === 'page';
+    }).length;
+    const sectionCount = pages.filter(function (item) {
+        return item.itemType === 'section';
+    }).length;
+    const savedDate = chapter.updatedAt || chapter.createdAt;
+    const savedDateText = savedDate ? new Date(savedDate).toLocaleString('ko-KR') : '-';
+    const coverImage = chapter.coverImage || '';
+    const summary = chapter.summary || '저장된 소개가 없습니다.';
+
+    title.textContent = 'Description';
+    content.innerHTML =
+        '<article class="library-description">' +
+        (coverImage ? '<div class="library-description-cover" style="background-image:url(\'' + escapeAttribute(coverImage) + '\');"></div>' : '') +
+        '<div class="library-description-body">' +
+        '<div class="library-description-meta">SAVED WORK</div>' +
+        '<h1>' + escapeHtml(chapter.title || 'Untitled Chapter') + '</h1>' +
+        (chapter.subtitle ? '<p class="library-description-subtitle">' + escapeHtml(chapter.subtitle) + '</p>' : '') +
+        '<div class="library-description-stats">' +
+        '<span>페이지 ' + pageCount + '</span>' +
+        '<span>섹션 ' + sectionCount + '</span>' +
+        '<span>캐릭터 ' + characters.length + '</span>' +
+        '<span>' + escapeHtml(savedDateText) + '</span>' +
+        '</div>' +
+        '<div class="library-description-actions">' +
+        '<button class="btn-accent" id="editSelectedChapter">작품 편집</button>' +
+        '</div>' +
+        '<section class="library-description-section">' +
+        '<h2>Summary</h2>' +
+        '<p>' + escapeHtml(summary).replace(/\n/g, '<br>') + '</p>' +
+        '</section>' +
+        renderCharacters(characters) +
+        '</div>' +
+        '</article>';
+
+    const editButton = document.getElementById('editSelectedChapter');
+    if (editButton) {
+        editButton.addEventListener('click', function () {
+            editChapter(chapter.id);
+        });
+    }
 }
 
 function deleteChapter(id) {
@@ -162,10 +189,43 @@ function deleteChapter(id) {
     }
     saveChapters();
     renderChapterList();
-    renderReader(chapters.find(function (item) {
+    renderDescription(chapters.find(function (item) {
         return item.id === selectedChapterId;
     }) || null);
     showNotification('챕터가 삭제되었습니다.');
+}
+
+function renderCharacters(characters) {
+    if (!characters.length) {
+        return '<section class="library-description-section"><h2>Characters</h2><p>등록된 캐릭터가 없습니다.</p></section>';
+    }
+
+    const characterItems = characters.map(function (character) {
+        const image = character.image || '';
+        return '<div class="library-character-item">' +
+            (image ? '<div class="library-character-image" style="background-image:url(\'' + escapeAttribute(image) + '\');"></div>' : '<div class="library-character-image"></div>') +
+            '<div>' +
+            '<strong>' + escapeHtml(character.name || '이름 없는 캐릭터') + '</strong>' +
+            (character.role ? '<span>' + escapeHtml(character.role) + '</span>' : '') +
+            (character.description ? '<p>' + escapeHtml(character.description).replace(/\n/g, '<br>') + '</p>' : '') +
+            '</div>' +
+            '</div>';
+    }).join('');
+
+    return '<section class="library-description-section"><h2>Characters</h2><div class="library-character-list">' + characterItems + '</div></section>';
+}
+
+function editChapter(id) {
+    const chapter = chapters.find(function (item) {
+        return item.id === id;
+    });
+    if (!chapter || !chapter.data) {
+        showNotification('편집할 작품 데이터가 없습니다.');
+        return;
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chapter.data));
+    window.location.href = 'index.html';
 }
 
 function showNotification(message) {
@@ -197,4 +257,8 @@ function escapeHtml(value) {
             "'": '&#39;'
         }[char];
     });
+}
+
+function escapeAttribute(value) {
+    return escapeHtml(value).replace(/`/g, '&#96;');
 }
