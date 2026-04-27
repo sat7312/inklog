@@ -1,38 +1,17 @@
-const CHAPTER_LIBRARY_STORAGE_KEY = 'rpLogChapterLibrary';
-const STORAGE_KEY = 'rpLogEditorData';
-const EDITING_CHAPTER_KEY = 'rpLogEditingChapterId';
-const THEME_KEY = 'owb_ui_theme';
+// Constants, showNotification, escapeHtml, applyTheme, setupThemeToggle,
+// setupSoundToggle, setupCreditModal are defined in common.js
 
 let chapters = [];
 let selectedChapterId = null;
-let notificationTimer = null;
 
 document.addEventListener('DOMContentLoaded', function () {
-    applySavedTheme();
+    setupThemeToggle();
+    setupSoundToggle();
+    setupCreditModal();
     setupLibraryControls();
     loadChapters();
     renderChapterList();
 });
-
-function applySavedTheme() {
-    const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
-    applyTheme(savedTheme);
-}
-
-function applyTheme(mode) {
-    const iconLight = document.getElementById('icon-theme-light');
-    const iconDark = document.getElementById('icon-theme-dark');
-
-    if (mode === 'light') {
-        document.body.classList.add('light-mode');
-        if (iconLight) iconLight.style.display = 'none';
-        if (iconDark) iconDark.style.display = 'block';
-    } else {
-        document.body.classList.remove('light-mode');
-        if (iconLight) iconLight.style.display = 'block';
-        if (iconDark) iconDark.style.display = 'none';
-    }
-}
 
 function setupLibraryControls() {
     const openEditor = document.getElementById('openEditor');
@@ -59,59 +38,6 @@ function setupLibraryControls() {
             const isVisible = previewPanel.classList.toggle('mobile-visible');
             if (iconEye) iconEye.style.display = isVisible ? 'none' : 'block';
             if (iconEdit) iconEdit.style.display = isVisible ? 'block' : 'none';
-        });
-    }
-
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function () {
-            const next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
-            applyTheme(next);
-            localStorage.setItem(THEME_KEY, next);
-        });
-    }
-
-    const soundToggle = document.getElementById('soundToggle');
-    const rainAudio = document.getElementById('rainAudio');
-    const iconOff = document.getElementById('icon-sound-off');
-    const iconOn = document.getElementById('icon-sound-on');
-    if (soundToggle && rainAudio) {
-        rainAudio.volume = 1.0;
-        soundToggle.addEventListener('click', function () {
-            if (rainAudio.paused) {
-                rainAudio.play().then(function () {
-                    if (iconOff) iconOff.style.display = 'none';
-                    if (iconOn) iconOn.style.display = 'block';
-                    soundToggle.classList.add('playing');
-                    showNotification('빗소리가 켜졌습니다.');
-                }).catch(function (error) {
-                    console.error('Audio playback failed:', error);
-                    showNotification('오디오 재생 실패');
-                });
-            } else {
-                rainAudio.pause();
-                if (iconOff) iconOff.style.display = 'block';
-                if (iconOn) iconOn.style.display = 'none';
-                soundToggle.classList.remove('playing');
-                showNotification('빗소리가 꺼졌습니다.');
-            }
-        });
-    }
-
-    const creditModal = document.getElementById('creditModal');
-    const creditToggle = document.getElementById('creditToggle');
-    const closeCredit = document.querySelector('.close-credit');
-    if (creditModal && creditToggle && closeCredit) {
-        creditToggle.addEventListener('click', function () {
-            creditModal.style.display = 'flex';
-        });
-        closeCredit.addEventListener('click', function () {
-            creditModal.style.display = 'none';
-        });
-        creditModal.addEventListener('click', function (event) {
-            if (event.target === creditModal) {
-                creditModal.style.display = 'none';
-            }
         });
     }
 }
@@ -194,12 +120,6 @@ function renderChapterList() {
     });
 }
 
-function selectFirstChapter() {
-    if (chapters.length > 0) {
-        selectChapter(chapters[0].id);
-    }
-}
-
 function selectChapter(id) {
     selectedChapterId = id;
     const chapter = chapters.find(function (item) {
@@ -228,19 +148,20 @@ function renderDescription(chapter) {
     if (readButton) {
         readButton.textContent = '읽기';
         readButton.style.display = 'inline-flex';
-        readButton.onclick = function () {
-            renderReader(chapter);
-        };
+        readButton.onclick = function () { renderReader(chapter); };
     }
     if (editButton) {
         editButton.style.display = 'inline-flex';
-        editButton.onclick = function () {
-            editChapter(chapter.id);
-        };
+        editButton.onclick = function () { editChapter(chapter.id); };
     }
-    content.innerHTML = chapter.descriptionHtml
-        ? '<div class="library-intro-description">' + chapter.descriptionHtml + '</div>'
-        : '<div class="library-empty-reader">이 작품은 Intro Preview가 저장되기 전에 생성되었습니다. 작품 편집 후 다시 저장하세요.</div>';
+
+    if (chapter.data) {
+        content.innerHTML = '<div class="library-intro-description">' + generateIntroHTML(chapter.data) + '</div>';
+    } else if (chapter.descriptionHtml) {
+        content.innerHTML = '<div class="library-intro-description">' + chapter.descriptionHtml + '</div>';
+    } else {
+        content.innerHTML = '<div class="library-empty-reader">이 작품은 Intro Preview가 저장되기 전에 생성되었습니다. 작품 편집 후 다시 저장하세요.</div>';
+    }
 }
 
 function renderReader(chapter) {
@@ -253,18 +174,17 @@ function renderReader(chapter) {
     title.textContent = chapter.title || 'Reader';
     if (editButton) {
         editButton.style.display = 'inline-flex';
-        editButton.onclick = function () {
-            editChapter(chapter.id);
-        };
+        editButton.onclick = function () { editChapter(chapter.id); };
     }
     if (readButton) {
         readButton.textContent = '작품 소개';
         readButton.style.display = 'inline-flex';
-        readButton.onclick = function () {
-            renderDescription(chapter);
-        };
+        readButton.onclick = function () { renderDescription(chapter); };
     }
-    content.innerHTML = chapter.html || '<div class="library-empty-reader">읽을 본문이 없습니다.</div>';
+
+    content.innerHTML = chapter.data
+        ? generateHTML(chapter.data, true)
+        : (chapter.html || '<div class="library-empty-reader">읽을 본문이 없습니다.</div>');
 }
 
 function deleteChapter(id) {
@@ -303,35 +223,4 @@ function editChapter(id) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(chapter.data));
     localStorage.setItem(EDITING_CHAPTER_KEY, id);
     window.location.href = 'index.html';
-}
-
-function showNotification(message) {
-    const notification = document.getElementById('notification');
-    if (!notification) return;
-
-    if (notificationTimer) {
-        clearTimeout(notificationTimer);
-        notification.classList.remove('show');
-    }
-
-    void notification.offsetWidth;
-    notification.textContent = message;
-    notification.classList.add('show');
-
-    notificationTimer = setTimeout(function () {
-        notification.classList.remove('show');
-        notificationTimer = null;
-    }, 2000);
-}
-
-function escapeHtml(value) {
-    return String(value || '').replace(/[&<>"']/g, function (char) {
-        return {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        }[char];
-    });
 }

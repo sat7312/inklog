@@ -974,29 +974,8 @@
 
     <div id="notification" class="notification"></div>
 
-    <script>
-        // 크레딧 모달 제어
-        const creditModal = document.getElementById('creditModal');
-        const creditToggle = document.getElementById('creditToggle');
-        const closeCredit = document.querySelector('.close-credit');
-
-        // 크레딧 버튼 클릭 시 모달 열기
-        creditToggle.addEventListener('click', () => {
-            creditModal.style.display = 'flex';
-        });
-
-        // 닫기 버튼 클릭 시 모달 닫기
-        closeCredit.addEventListener('click', () => {
-            creditModal.style.display = 'none';
-        });
-
-        // 모달 바깥 영역 클릭 시 닫기
-        creditModal.addEventListener('click', (e) => {
-            if (e.target === creditModal) {
-                creditModal.style.display = 'none';
-            }
-        });
-    </script>
+    <script src="common.js"></script>
+    <script src="renderer.js"></script>
     <script src="script.js"></script>
     <!-- 빗소리 오디오 (Loop 설정) -->
     <!-- 로컬 파일 사용으로 변경 -->
