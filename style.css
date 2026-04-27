@@ -992,7 +992,9 @@ button {
     border-bottom: 1px solid var(--border-color);
     background: var(--preview-header-bg);
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    position: relative;
 }
 
 .preview-header h2 {
@@ -1000,6 +1002,7 @@ button {
     font-size: 15px;
     letter-spacing: 3px;
     color: var(--preview-header-color);
+    text-transform: uppercase;
 }
 
 .preview-content {
@@ -1393,7 +1396,10 @@ input[type="color"] {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-left: auto;
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .library-work-num {
