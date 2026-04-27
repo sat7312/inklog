@@ -14,6 +14,12 @@ let dividerStyle = 'line';
 let dividerCustomText = '';
 let localImages = {};
 
+const PROFILE_COLOR_PRESETS = [
+    '#c77d8e', '#5a9ace', '#6b8e65', '#d4a841',
+    '#9d5f8f', '#4a9d88', '#e07a5f', '#7b68a8',
+    '#8b6f47', '#707070'
+];
+
 let textSpacing = {
     fontSize: 14.2,
     lineHeight: 1.7,
@@ -375,7 +381,8 @@ function loadFromStorage() {
                             focusX: data.userFocusX !== undefined ? data.userFocusX : 50,
                             focusY: data.userFocusY !== undefined ? data.userFocusY : 30,
                             desc: data.userDesc || '',
-                            tag: data.userProfileTag || ''
+                            tag: data.userProfileTag || '',
+                            color: ''
                         },
                         {
                             name: data.charName || 'Char',
@@ -383,7 +390,8 @@ function loadFromStorage() {
                             focusX: data.charFocusX !== undefined ? data.charFocusX : 50,
                             focusY: data.charFocusY !== undefined ? data.charFocusY : 30,
                             desc: data.charDesc || '',
-                            tag: data.charProfileTag || ''
+                            tag: data.charProfileTag || '',
+                            color: ''
                         }
                     ];
                 } else {
@@ -476,7 +484,8 @@ function loadDefaultSettings() {
             focusX: 50,
             focusY: 30,
             desc: ' Profile 1 Description',
-            tag: 'CHAR'
+            tag: 'CHAR',
+            color: '#c77d8e'
         },
         {
             name: 'Jong-won',
@@ -485,7 +494,8 @@ function loadDefaultSettings() {
             focusX: 50,
             focusY: 10,
             desc: 'Profile 2 Description',
-            tag: 'USER'
+            tag: 'USER',
+            color: '#5a9ace'
         }
     ];
 
@@ -1360,7 +1370,8 @@ function setupEventListeners() {
                     focusX: 50,
                     focusY: 30,
                     desc: '',
-                    tag: ''
+                    tag: '',
+                    color: ''
                 });
                 updateProfilesList();
                 saveToStorage();
@@ -2189,6 +2200,19 @@ function updateProfilesList() {
             '<option value="CHAR" ' + (profile.tag === 'CHAR' ? 'selected' : '') + '>CHAR</option>' +
             '</select>' +
             '</div>' +
+            '</div>' +
+            '<div class="input-group">' +
+            '<label>캐릭터 색상</label>' +
+            '<div class="profile-color-row">' +
+            '<button class="profile-color-chip" type="button" style="background:' + (profile.color || '#5a9ace') + ';" data-index="' + index + '" title="색상 미리보기"></button>' +
+            '<input type="text" class="profile-color-text-input" placeholder="#5a9ace" value="' + (profile.color || '') + '" data-index="' + index + '">' +
+            '<button class="btn-move btn-profile-eyedropper" type="button" data-index="' + index + '" title="스포이드">⌖</button>' +
+            '</div>' +
+            '<div class="profile-color-palette">' +
+            PROFILE_COLOR_PRESETS.map(function (color) {
+                return '<button class="profile-color-swatch" type="button" style="background:' + color + ';" data-index="' + index + '" data-color="' + color + '" title="' + color + '"></button>';
+            }).join('') +
+            '</div>' +
             '</div>';
 
         profilesList.appendChild(profileSection);
@@ -2260,6 +2284,56 @@ function attachProfileEvents(profilesList) {
         input.addEventListener('change', e => {
             profiles[parseInt(e.target.dataset.index)].tag = e.target.value;
             updatePreview(); saveToStorage();
+        });
+    });
+    function setProfileColor(idx, value) {
+        profiles[idx].color = value;
+        const textInput = profilesList.querySelector('.profile-color-text-input[data-index="' + idx + '"]');
+        const chip = profilesList.querySelector('.profile-color-chip[data-index="' + idx + '"]');
+        if (textInput) textInput.value = value;
+        if (chip && /^#[0-9a-fA-F]{6}$/.test(value)) chip.style.background = value;
+        updatePreview(); saveToStorage();
+    }
+
+    profilesList.querySelectorAll('.profile-color-text-input').forEach(input => {
+        input.addEventListener('input', e => {
+            const idx = parseInt(e.target.dataset.index);
+            const value = e.target.value.trim();
+            profiles[idx].color = value;
+            if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+                const chip = profilesList.querySelector('.profile-color-chip[data-index="' + idx + '"]');
+                if (chip) chip.style.background = value;
+            }
+            updatePreview(); saveToStorage();
+        });
+    });
+    profilesList.querySelectorAll('.profile-color-swatch').forEach(btn => {
+        btn.addEventListener('click', e => {
+            setProfileColor(parseInt(e.currentTarget.dataset.index), e.currentTarget.dataset.color);
+        });
+    });
+    profilesList.querySelectorAll('.profile-color-chip').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const idx = parseInt(e.currentTarget.dataset.index);
+            const current = profiles[idx].color || '#5a9ace';
+            const nextIndex = (PROFILE_COLOR_PRESETS.indexOf(current.toLowerCase()) + 1) % PROFILE_COLOR_PRESETS.length;
+            setProfileColor(idx, PROFILE_COLOR_PRESETS[nextIndex]);
+        });
+    });
+    profilesList.querySelectorAll('.btn-profile-eyedropper').forEach(btn => {
+        const isSupported = 'EyeDropper' in window;
+        btn.style.display = isSupported ? 'flex' : 'none';
+        if (!isSupported) return;
+        btn.addEventListener('click', async e => {
+            try {
+                const eyeDropper = new EyeDropper();
+                const result = await eyeDropper.open();
+                setProfileColor(parseInt(e.currentTarget.dataset.index), result.sRGBHex);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    showNotification('스포이드 사용 실패');
+                }
+            }
         });
     });
     // [추가됨] 위로 이동 버튼 이벤트

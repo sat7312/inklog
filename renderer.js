@@ -1007,16 +1007,17 @@ function generateHTML(ctx, isPreview) {
             const imgWrapperStyle = 'display: inline-block; width: 100%; max-width: clamp(130px, 18vw, 200px); vertical-align: top; margin: 0 auto clamp(10px, 2vw, 15px) auto;';
             const imgCircleStyleBase = 'width: 100%; height: 0; padding-bottom: 100%; border-radius: 50%; margin: 0 auto;';
             const textContainerStyle = 'text-align: center;';
-            const nameStyle = 'display: block; font-size: clamp(13px, 2.5vw, 18px); font-weight: 700; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; color: ' + theme.headerText + '; line-height: 1.2; margin-bottom: clamp(6px, 1.5vw, 10px);';
-            const tagStyle = 'font-size: clamp(8px, 1.3vw, 10px); color: ' + theme.tagText + '; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
             const descStyle = 'font-size: clamp(11px, 2vw, 12px); line-height: 1.6; color: ' + theme.text + '; word-break: keep-all; text-align: center; padding: 0 5px; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
 
             topContent += '<div style="' + profileRowStyle + '">';
             ctx.profiles.forEach(function (profile) {
                 const profileImageUrl = resolveImageUrl(profile.imageUrl || '', ctx);
+                const profileColor = profile.color || theme.headerText;
                 const hasImage = profileImageUrl.trim() !== '';
                 const hasContent = (profile.name && profile.name.trim()) || (profile.desc && profile.desc.trim());
                 if (hasContent) {
+                    const nameStyle = 'display: block; font-size: clamp(13px, 2.5vw, 18px); font-weight: 700; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; color: ' + profileColor + '; line-height: 1.2; margin-bottom: clamp(6px, 1.5vw, 10px);';
+                    const tagStyle = 'font-size: clamp(8px, 1.3vw, 10px); color: ' + profileColor + '; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
                     topContent += '<div style="' + profileContainerStyle + '">';
                     if (hasImage) {
                         topContent += '<div style="' + imgWrapperStyle + '">';

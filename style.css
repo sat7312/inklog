@@ -928,6 +928,49 @@ button {
     font-size: 16px;
 }
 
+.profile-color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-color-chip {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.profile-color-text-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.profile-color-palette {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.profile-color-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    min-height: 22px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.profile-color-swatch:hover,
+.profile-color-chip:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+}
+
 /* 페이지 삭제 버튼 */
 .btn-delete-page {
     width: 32px;
