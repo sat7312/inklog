@@ -1072,7 +1072,6 @@ button {
 /* 닫기 버튼 통일 (.close와 .close-section 모두 적용) */
 .close,
 .close-section,
-.close-character,
 .close-credit {
     font-size: 28px;
     width: 28px;
@@ -1090,7 +1089,6 @@ button {
 
 .close:hover,
 .close-section:hover,
-.close-character:hover,
 .close-credit:hover {
     color: var(--modal-close-hover);
     background: var(--accent-blue-dim);
@@ -1373,10 +1371,29 @@ input[type="color"] {
     font-size: 13px;
 }
 
+.library-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .library-actions {
     display: flex;
     gap: 10px;
     flex-shrink: 0;
+}
+
+.library-edit-button {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+.library-reader-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
 }
 
 .library-work-num {
@@ -1495,76 +1512,9 @@ input[type="color"] {
     padding: 6px 10px;
 }
 
-.library-description-actions {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 28px;
-}
-
-.library-description-section {
-    border-top: 1px solid var(--border-color);
-    padding-top: 22px;
-    margin-top: 22px;
-}
-
-.library-description-section h2 {
-    font-family: var(--font-display);
-    font-size: 14px;
-    letter-spacing: 1.5px;
-    color: var(--panel-header-h1);
-    margin-bottom: 12px;
-}
-
-.library-description-section p {
-    color: var(--text-main);
-    font-size: 14px;
-    line-height: 1.8;
-}
-
-.library-character-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-}
-
-.library-character-item {
-    display: flex;
-    gap: 12px;
-    background: var(--page-item-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-}
-
-.library-character-image {
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
-    border-radius: 8px;
-    background: var(--bg-secondary);
-    background-position: center;
-    background-size: cover;
-    border: 1px solid var(--border-color);
-}
-
-.library-character-item strong {
-    display: block;
-    color: var(--page-item-name-color);
-    font-size: 14px;
-    margin-bottom: 2px;
-}
-
-.library-character-item span {
-    display: block;
-    color: var(--accent-blue);
-    font-size: 12px;
-    margin-bottom: 6px;
-}
-
-.library-character-item p {
-    color: var(--text-muted);
-    font-size: 12px;
-    line-height: 1.6;
+.library-intro-description {
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 /* 미디어 쿼리 */
@@ -1582,6 +1532,10 @@ input[type="color"] {
     .library-header {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .library-header-controls {
+        justify-content: flex-start;
     }
 
     .library-layout {
@@ -2669,8 +2623,7 @@ body.light-mode .btn-save-new-preset {
 
     /* 닫기 버튼 크기 */
     .close,
-    .close-section,
-    .close-character {
+    .close-section {
         font-size: 24px;
         width: 24px;
         height: 24px;
@@ -3144,7 +3097,6 @@ body.light-mode .btn-save-new-preset {
     /* 닫기 버튼 크기 조정 */
     .close,
     .close-section,
-    .close-character,
     .close-credit {
         font-size: 24px;
         width: 24px;

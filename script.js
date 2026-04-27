@@ -4,9 +4,7 @@ let tags = [];
 let replacements = []; // 단어 치환 목록
 let customThemes = [];
 let profiles = []; // 프로필 목록 (최대 6개)
-let characters = [];
 let currentEditingIndex = null;
-let currentCharacterIndex = null;
 let tempPageTags = [];
 let globalTheme = 'basic'; // 전역 테마 설정
 let hidePageNumbers = false; // 페이지 헤더 번호 숨김 여부
@@ -582,6 +580,8 @@ function setupTabs() {
                     toggleBtn.title = '미리보기 보기';
                 }
             }
+
+            updatePreview();
         });
     });
 }
@@ -707,7 +707,6 @@ function loadFromStorage() {
 
             replacements = data.replacements || [];
             customThemes = data.customThemes || [];
-            characters = data.characters || [];
 
             // 텍스트 간격 설정 로드 (요소가 있을 때만)
             if (data.textSpacing) {
@@ -876,7 +875,6 @@ function loadFromStorage() {
             updatePagesList();
             updateCustomThemesList();
             updateProfilesList();
-            updateCharactersList();
         } else {
             // 저장된 데이터가 없을 때: 초기값 설정
             loadDefaultSettings();
@@ -1027,9 +1025,6 @@ function loadDefaultSettings() {
     // 커스텀 테마
     customThemes = [];
 
-    // 캐릭터 목록
-    characters = [];
-
     // 텍스트 간격 설정
     textSpacing = {
         fontSize: 14.2,
@@ -1072,7 +1067,6 @@ function loadDefaultSettings() {
     updatePagesList();
     updateCustomThemesList();
     updateProfilesList();
-    updateCharactersList();
 
     // 초기 미리보기 업데이트
     updatePreview();
@@ -1114,6 +1108,17 @@ function escapeHtml(value) {
             '"': '&quot;',
             "'": '&#39;'
         }[char];
+    });
+}
+
+function getProfileCharacters() {
+    return profiles.map(function (profile) {
+        return {
+            name: profile.name || '',
+            role: profile.tag || '',
+            image: profile.imageUrl || '',
+            description: profile.desc || ''
+        };
     });
 }
 
@@ -1159,7 +1164,7 @@ function collectEditorData(extraData) {
         replacements: replacements,
         customThemes: customThemes,
         profiles: profiles,
-        characters: characters,
+        characters: getProfileCharacters(),
         textSpacing: textSpacing,
         fontFamily: fontFamily,
         globalTheme: globalTheme,
@@ -1456,18 +1461,6 @@ function setupEventListeners() {
         });
     }
 
-    const addCharacterBtn = document.getElementById('addCharacter');
-    if (addCharacterBtn) {
-        addCharacterBtn.addEventListener('click', function () {
-            currentCharacterIndex = null;
-            document.getElementById('characterName').value = '';
-            document.getElementById('characterRole').value = '';
-            document.getElementById('characterImage').value = '';
-            document.getElementById('characterDescription').value = '';
-            document.getElementById('characterModal').style.display = 'block';
-        });
-    }
-
     const closeModal = document.querySelector('.close');
     if (closeModal) {
         closeModal.addEventListener('click', function () {
@@ -1482,13 +1475,6 @@ function setupEventListeners() {
         });
     }
 
-    const closeCharacterModal = document.querySelector('.close-character');
-    if (closeCharacterModal) {
-        closeCharacterModal.addEventListener('click', function () {
-            document.getElementById('characterModal').style.display = 'none';
-        });
-    }
-
     const savePage = document.getElementById('savePage');
     if (savePage) {
         savePage.addEventListener('click', savePageData);
@@ -1499,11 +1485,6 @@ function setupEventListeners() {
         saveSection.addEventListener('click', saveSectionData);
     }
 
-    const saveCharacter = document.getElementById('saveCharacter');
-    if (saveCharacter) {
-        saveCharacter.addEventListener('click', saveCharacterData);
-    }
-
     const deletePage = document.getElementById('deletePage');
     if (deletePage) {
         deletePage.addEventListener('click', deletePageData);
@@ -1512,11 +1493,6 @@ function setupEventListeners() {
     const deleteSection = document.getElementById('deleteSection');
     if (deleteSection) {
         deleteSection.addEventListener('click', deleteSectionData);
-    }
-
-    const deleteCharacter = document.getElementById('deleteCharacter');
-    if (deleteCharacter) {
-        deleteCharacter.addEventListener('click', deleteCharacterData);
     }
 
     const deleteAllPagesBtn = document.getElementById('deleteAllPages');
@@ -2066,6 +2042,7 @@ function saveChapterToLibrary() {
             subtitle: getInputValue('coverSubtitle'),
             summary: getInputValue('summaryText'),
             coverImage: getInputValue('coverImage'),
+            descriptionHtml: generateIntroPreviewHTML(),
             html: generateHTML(false),
             data: collectEditorData(),
             createdAt: now,
@@ -2090,9 +2067,7 @@ function resetCurrentData() {
     tags = [];
     replacements = [];
     profiles = [];
-    characters = [];
     currentEditingIndex = null;
-    currentCharacterIndex = null;
     tempPageTags = [];
     globalTheme = 'basic';
     hidePageNumbers = false;
@@ -2175,7 +2150,6 @@ function resetCurrentData() {
     updateTagsList();
     updateReplacementsList();
     updateProfilesList();
-    updateCharactersList();
 
     // 인트로/커버 섹션 숨김
     const topSectionContent = document.getElementById('topSectionContent');
@@ -2341,7 +2315,6 @@ function importDataFromJSON(file) {
             if (data.replacements) replacements = data.replacements;
             if (data.customThemes) customThemes = data.customThemes;
             if (data.profiles) profiles = data.profiles;
-            characters = data.characters || [];
 
             // 텍스트 간격 복원
             if (data.textSpacing) {
@@ -2443,7 +2416,6 @@ function importDataFromJSON(file) {
             updatePagesList();
             updateCustomThemesList();
             updateProfilesList();
-            updateCharactersList();
             updatePreview();
             saveToStorage();
 
@@ -3561,86 +3533,6 @@ function attachProfileEvents(profilesList) {
 
 }
 
-function updateCharactersList() {
-    const charactersList = document.getElementById('charactersList');
-    if (!charactersList) return;
-
-    charactersList.innerHTML = '';
-
-    if (characters.length === 0) {
-        const emptyItem = document.createElement('div');
-        emptyItem.className = 'page-item';
-        emptyItem.innerHTML =
-            '<div class="page-item-header">' +
-            '<div class="page-item-main">' +
-            '<div class="page-item-info">' +
-            '<div class="page-item-name">등록된 캐릭터가 없습니다.</div>' +
-            '<div class="page-item-preview">NEW CHARACTER 버튼으로 캐릭터를 추가하세요.</div>' +
-            '</div>' +
-            '</div>' +
-            '</div>';
-        charactersList.appendChild(emptyItem);
-        return;
-    }
-
-    characters.forEach(function (character, index) {
-        const characterItem = document.createElement('div');
-        characterItem.className = 'page-item';
-
-        const imageUrl = normalizeImageUrl(character.image || '');
-        const imageHtml = imageUrl
-            ? '<div style="width:44px;height:44px;border-radius:8px;background:url(\'' + escapeHtml(imageUrl) + '\') center / cover no-repeat;flex-shrink:0;"></div>'
-            : '<div style="width:44px;height:44px;border-radius:8px;background:var(--bg-secondary);border:1px solid var(--border-color);flex-shrink:0;"></div>';
-        const role = character.role ? escapeHtml(character.role) : '역할 없음';
-        const desc = character.description ? escapeHtml(character.description).replace(/\n/g, ' ') : '설명 없음';
-
-        characterItem.innerHTML =
-            '<div class="page-item-header">' +
-            '<div class="page-item-main">' +
-            '<span class="page-num">' + (index + 1) + '</span>' +
-            imageHtml +
-            '<div class="page-item-info">' +
-            '<div class="page-item-name">' + escapeHtml(character.name || '이름 없는 캐릭터') + '</div>' +
-            '<div class="page-item-preview">' + role + ' · ' + desc.substring(0, 80) + '</div>' +
-            '</div>' +
-            '</div>' +
-            '<div class="page-controls">' +
-            '<button class="btn-edit-page btn-edit-character" data-index="' + index + '" title="수정">EDIT</button>' +
-            '<button class="btn-delete-page btn-delete-character" data-index="' + index + '" title="삭제">×</button>' +
-            '</div>' +
-            '</div>';
-
-        charactersList.appendChild(characterItem);
-    });
-
-    charactersList.querySelectorAll('.btn-edit-character').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            const idx = parseInt(e.target.dataset.index);
-            const character = characters[idx];
-            if (!character) return;
-
-            currentCharacterIndex = idx;
-            document.getElementById('characterName').value = character.name || '';
-            document.getElementById('characterRole').value = character.role || '';
-            document.getElementById('characterImage').value = character.image || '';
-            document.getElementById('characterDescription').value = character.description || '';
-            document.getElementById('characterModal').style.display = 'block';
-        });
-    });
-
-    charactersList.querySelectorAll('.btn-delete-character').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            const idx = parseInt(e.target.dataset.index);
-            if (confirm('이 캐릭터를 삭제하시겠습니까?')) {
-                characters.splice(idx, 1);
-                updateCharactersList();
-                saveToStorage();
-            }
-        });
-    });
-}
-
-
 function updateReplacementsList() {
     const list = document.getElementById('replacementsList');
     if (!list) return;
@@ -3935,46 +3827,6 @@ function deletePageData() {
         document.getElementById('pageModal').style.display = 'none';
         updatePagesList();
         updatePreview();
-        saveToStorage();
-    }
-}
-
-function saveCharacterData() {
-    const name = document.getElementById('characterName').value.trim();
-    const role = document.getElementById('characterRole').value.trim();
-    const image = document.getElementById('characterImage').value.trim();
-    const description = document.getElementById('characterDescription').value;
-
-    if (!name && !role && !image && !description.trim()) {
-        alert('캐릭터 정보를 하나 이상 입력해주세요.');
-        return;
-    }
-
-    const characterData = {
-        name: name,
-        role: role,
-        image: image,
-        description: description
-    };
-
-    if (currentCharacterIndex === null) {
-        characters.push(characterData);
-    } else {
-        characters[currentCharacterIndex] = characterData;
-    }
-
-    document.getElementById('characterModal').style.display = 'none';
-    currentCharacterIndex = null;
-    updateCharactersList();
-    saveToStorage();
-}
-
-function deleteCharacterData() {
-    if (currentCharacterIndex !== null && confirm('삭제하시겠습니까?')) {
-        characters.splice(currentCharacterIndex, 1);
-        document.getElementById('characterModal').style.display = 'none';
-        currentCharacterIndex = null;
-        updateCharactersList();
         saveToStorage();
     }
 }
@@ -4819,9 +4671,45 @@ function generateHTML(isPreview) {
 }
 
 function updatePreview() {
-    const html = generateHTML(true);
+    const activeTab = document.querySelector('.tab-content.active');
+    const html = activeTab && activeTab.id === 'tab-pages'
+        ? generatePagesPreviewHTML()
+        : generateHTML(true);
     const preview = document.getElementById('preview');
     preview.innerHTML = html;
+}
+
+function generatePagesPreviewHTML() {
+    const enableTopSection = document.getElementById('enableTopSection');
+    const enableComment = document.getElementById('enableComment');
+    const originalTopSection = enableTopSection ? enableTopSection.checked : false;
+    const originalComment = enableComment ? enableComment.checked : false;
+
+    if (enableTopSection) enableTopSection.checked = false;
+    if (enableComment) enableComment.checked = false;
+
+    const html = generateHTML(true);
+
+    if (enableTopSection) enableTopSection.checked = originalTopSection;
+    if (enableComment) enableComment.checked = originalComment;
+
+    return html;
+}
+
+function generateIntroPreviewHTML() {
+    const enableComment = document.getElementById('enableComment');
+    const originalComment = enableComment ? enableComment.checked : false;
+    const originalPages = pages;
+
+    if (enableComment) enableComment.checked = false;
+    pages = [];
+
+    const html = generateHTML(true);
+
+    pages = originalPages;
+    if (enableComment) enableComment.checked = originalComment;
+
+    return html;
 }
 
 async function copyToClipboard() {
@@ -5208,8 +5096,6 @@ function loadPreset(slotIndex) {
             profiles = JSON.parse(JSON.stringify(data.profiles));
             updateProfilesList();
         }
-        characters = data.characters ? JSON.parse(JSON.stringify(data.characters)) : [];
-        updateCharactersList();
 
         // 텍스트 간격 복원
         if (data.textSpacing) {

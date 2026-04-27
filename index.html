@@ -43,13 +43,6 @@
                     </svg>
                     <span>Pages</span>
                 </button>
-                <button class="nav-item" data-tab="tab-character" title="캐릭터">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <span>Character</span>
-                </button>
                 <button class="nav-item" data-tab="tab-comment" title="코멘트">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -606,22 +599,7 @@
                 </div>
             </div>
 
-            <!-- 4. 캐릭터 탭 -->
-            <div id="tab-character" class="tab-content">
-                <div class="section-title">
-                    <h2>Characters</h2>
-                    <span class="deco-line"></span>
-                </div>
-
-                <div class="control-grid" style="margin-top: 16px; margin-bottom: 15px;">
-                    <button id="addCharacter" class="btn-accent">
-                        <span>+ NEW CHARACTER</span>
-                    </button>
-                </div>
-                <div id="charactersList" class="cards-list"></div>
-            </div>
-
-            <!-- 5. 코멘트 탭 -->
+            <!-- 4. 코멘트 탭 -->
             <div id="tab-comment" class="tab-content">
                 <div class="section-title">
                     <h2>Comment Section</h2>
@@ -653,7 +631,7 @@
                 </div>
             </div>
 
-            <!-- 6. 테마 탭 -->
+            <!-- 5. 테마 탭 -->
             <div id="tab-theme" class="tab-content">
                 <div class="section-title">
                     <h2>Theme Settings</h2>
@@ -876,43 +854,6 @@
                 <div class="modal-footer">
                     <button id="deletePage" class="btn-danger">DELETE</button>
                     <button id="savePage" class="btn-accent">SAVE CHANGE</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 캐릭터 편집 모달 -->
-    <div id="characterModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>EDIT CHARACTER</h2>
-                <span class="close-character">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="control-grid">
-                    <div class="input-group">
-                        <label>캐릭터 이름</label>
-                        <input type="text" id="characterName" placeholder=" ">
-                    </div>
-                    <div class="input-group">
-                        <label>역할 / 태그</label>
-                        <input type="text" id="characterRole" placeholder="주연, 조연, 적대자 등">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>이미지 URL</label>
-                    <input type="text" id="characterImage" placeholder="https://...">
-                </div>
-
-                <div class="input-group area-group">
-                    <label>캐릭터 설명</label>
-                    <textarea id="characterDescription" rows="8" placeholder="설정, 성격, 관계 등을 입력하세요..."></textarea>
-                </div>
-
-                <div class="modal-footer">
-                    <button id="deleteCharacter" class="btn-danger">DELETE</button>
-                    <button id="saveCharacter" class="btn-accent">SAVE CHANGE</button>
                 </div>
             </div>
         </div>

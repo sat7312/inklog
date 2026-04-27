@@ -8,6 +8,7 @@ let notificationTimer = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
+    setupLibraryControls();
     loadChapters();
     renderChapterList();
     selectFirstChapter();
@@ -15,8 +16,76 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function applySavedTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
-    if (savedTheme === 'light') {
+    applyTheme(savedTheme);
+}
+
+function applyTheme(mode) {
+    const iconLight = document.getElementById('icon-theme-light');
+    const iconDark = document.getElementById('icon-theme-dark');
+
+    if (mode === 'light') {
         document.body.classList.add('light-mode');
+        if (iconLight) iconLight.style.display = 'none';
+        if (iconDark) iconDark.style.display = 'block';
+    } else {
+        document.body.classList.remove('light-mode');
+        if (iconLight) iconLight.style.display = 'block';
+        if (iconDark) iconDark.style.display = 'none';
+    }
+}
+
+function setupLibraryControls() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+            const next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+            applyTheme(next);
+            localStorage.setItem(THEME_KEY, next);
+        });
+    }
+
+    const soundToggle = document.getElementById('soundToggle');
+    const rainAudio = document.getElementById('rainAudio');
+    const iconOff = document.getElementById('icon-sound-off');
+    const iconOn = document.getElementById('icon-sound-on');
+    if (soundToggle && rainAudio) {
+        rainAudio.volume = 1.0;
+        soundToggle.addEventListener('click', function () {
+            if (rainAudio.paused) {
+                rainAudio.play().then(function () {
+                    if (iconOff) iconOff.style.display = 'none';
+                    if (iconOn) iconOn.style.display = 'block';
+                    soundToggle.classList.add('playing');
+                    showNotification('빗소리가 켜졌습니다.');
+                }).catch(function (error) {
+                    console.error('Audio playback failed:', error);
+                    showNotification('오디오 재생 실패');
+                });
+            } else {
+                rainAudio.pause();
+                if (iconOff) iconOff.style.display = 'block';
+                if (iconOn) iconOn.style.display = 'none';
+                soundToggle.classList.remove('playing');
+                showNotification('빗소리가 꺼졌습니다.');
+            }
+        });
+    }
+
+    const creditModal = document.getElementById('creditModal');
+    const creditToggle = document.getElementById('creditToggle');
+    const closeCredit = document.querySelector('.close-credit');
+    if (creditModal && creditToggle && closeCredit) {
+        creditToggle.addEventListener('click', function () {
+            creditModal.style.display = 'flex';
+        });
+        closeCredit.addEventListener('click', function () {
+            creditModal.style.display = 'none';
+        });
+        creditModal.addEventListener('click', function (event) {
+            if (event.target === creditModal) {
+                creditModal.style.display = 'none';
+            }
+        });
     }
 }
 
@@ -116,59 +185,59 @@ function selectChapter(id) {
 function renderDescription(chapter) {
     const title = document.getElementById('readerTitle');
     const content = document.getElementById('readerContent');
+    const editButton = document.getElementById('editSelectedChapter');
+    const readButton = document.getElementById('readSelectedChapter');
     if (!title || !content) return;
 
     if (!chapter) {
         title.textContent = 'Description';
         content.innerHTML = '<div class="library-empty-reader">저장된 작품을 선택하면 소개 페이지가 표시됩니다.</div>';
+        if (editButton) editButton.style.display = 'none';
+        if (readButton) readButton.style.display = 'none';
         return;
     }
 
-    const data = chapter.data || {};
-    const characters = Array.isArray(data.characters) ? data.characters : [];
-    const pages = Array.isArray(data.pages) ? data.pages : [];
-    const pageCount = pages.filter(function (item) {
-        return !item.itemType || item.itemType === 'page';
-    }).length;
-    const sectionCount = pages.filter(function (item) {
-        return item.itemType === 'section';
-    }).length;
-    const savedDate = chapter.updatedAt || chapter.createdAt;
-    const savedDateText = savedDate ? new Date(savedDate).toLocaleString('ko-KR') : '-';
-    const coverImage = chapter.coverImage || '';
-    const summary = chapter.summary || '저장된 소개가 없습니다.';
-
     title.textContent = 'Description';
-    content.innerHTML =
-        '<article class="library-description">' +
-        (coverImage ? '<div class="library-description-cover" style="background-image:url(\'' + escapeAttribute(coverImage) + '\');"></div>' : '') +
-        '<div class="library-description-body">' +
-        '<div class="library-description-meta">SAVED WORK</div>' +
-        '<h1>' + escapeHtml(chapter.title || 'Untitled Chapter') + '</h1>' +
-        (chapter.subtitle ? '<p class="library-description-subtitle">' + escapeHtml(chapter.subtitle) + '</p>' : '') +
-        '<div class="library-description-stats">' +
-        '<span>페이지 ' + pageCount + '</span>' +
-        '<span>섹션 ' + sectionCount + '</span>' +
-        '<span>캐릭터 ' + characters.length + '</span>' +
-        '<span>' + escapeHtml(savedDateText) + '</span>' +
-        '</div>' +
-        '<div class="library-description-actions">' +
-        '<button class="btn-accent" id="editSelectedChapter">작품 편집</button>' +
-        '</div>' +
-        '<section class="library-description-section">' +
-        '<h2>Summary</h2>' +
-        '<p>' + escapeHtml(summary).replace(/\n/g, '<br>') + '</p>' +
-        '</section>' +
-        renderCharacters(characters) +
-        '</div>' +
-        '</article>';
-
-    const editButton = document.getElementById('editSelectedChapter');
-    if (editButton) {
-        editButton.addEventListener('click', function () {
-            editChapter(chapter.id);
-        });
+    if (readButton) {
+        readButton.textContent = '읽기';
+        readButton.style.display = 'inline-flex';
+        readButton.onclick = function () {
+            renderReader(chapter);
+        };
     }
+    if (editButton) {
+        editButton.style.display = 'inline-flex';
+        editButton.onclick = function () {
+            editChapter(chapter.id);
+        };
+    }
+    content.innerHTML = chapter.descriptionHtml
+        ? '<div class="library-intro-description">' + chapter.descriptionHtml + '</div>'
+        : '<div class="library-empty-reader">이 작품은 Intro Preview가 저장되기 전에 생성되었습니다. 작품 편집 후 다시 저장하세요.</div>';
+}
+
+function renderReader(chapter) {
+    const title = document.getElementById('readerTitle');
+    const content = document.getElementById('readerContent');
+    const editButton = document.getElementById('editSelectedChapter');
+    const readButton = document.getElementById('readSelectedChapter');
+    if (!title || !content || !chapter) return;
+
+    title.textContent = chapter.title || 'Reader';
+    if (editButton) {
+        editButton.style.display = 'inline-flex';
+        editButton.onclick = function () {
+            editChapter(chapter.id);
+        };
+    }
+    if (readButton) {
+        readButton.textContent = '작품 소개';
+        readButton.style.display = 'inline-flex';
+        readButton.onclick = function () {
+            renderDescription(chapter);
+        };
+    }
+    content.innerHTML = chapter.html || '<div class="library-empty-reader">읽을 본문이 없습니다.</div>';
 }
 
 function deleteChapter(id) {
@@ -193,26 +262,6 @@ function deleteChapter(id) {
         return item.id === selectedChapterId;
     }) || null);
     showNotification('챕터가 삭제되었습니다.');
-}
-
-function renderCharacters(characters) {
-    if (!characters.length) {
-        return '<section class="library-description-section"><h2>Characters</h2><p>등록된 캐릭터가 없습니다.</p></section>';
-    }
-
-    const characterItems = characters.map(function (character) {
-        const image = character.image || '';
-        return '<div class="library-character-item">' +
-            (image ? '<div class="library-character-image" style="background-image:url(\'' + escapeAttribute(image) + '\');"></div>' : '<div class="library-character-image"></div>') +
-            '<div>' +
-            '<strong>' + escapeHtml(character.name || '이름 없는 캐릭터') + '</strong>' +
-            (character.role ? '<span>' + escapeHtml(character.role) + '</span>' : '') +
-            (character.description ? '<p>' + escapeHtml(character.description).replace(/\n/g, '<br>') + '</p>' : '') +
-            '</div>' +
-            '</div>';
-    }).join('');
-
-    return '<section class="library-description-section"><h2>Characters</h2><div class="library-character-list">' + characterItems + '</div></section>';
 }
 
 function editChapter(id) {
@@ -257,8 +306,4 @@ function escapeHtml(value) {
             "'": '&#39;'
         }[char];
     });
-}
-
-function escapeAttribute(value) {
-    return escapeHtml(value).replace(/`/g, '&#96;');
 }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Chapter Library</title>
+    <title>InkLog</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" as="style" crossorigin
@@ -16,8 +16,49 @@
     <div class="library-shell">
         <header class="library-header">
             <div>
-                <h1>Chapter Library</h1>
-                <p>저장된 작품을 선택해 읽습니다.</p>
+                <h1>InkLog</h1>
+                <p>Chapter Library</p>
+            </div>
+            <div class="library-header-controls">
+                <button id="themeToggle" class="btn-theme-toggle" title="라이트/다크 모드 전환">
+                    <svg id="icon-theme-light" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" style="display: none;">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg id="icon-theme-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" style="display: block;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+                <button id="soundToggle" class="btn-sound-toggle" title="빗소리 켜기/끄기">
+                    <svg id="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" style="display: block;">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                        <line x1="23" y1="9" x2="17" y2="15" />
+                        <line x1="17" y1="9" x2="23" y2="15" />
+                    </svg>
+                    <svg id="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" style="display: none;">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </svg>
+                </button>
+                <button id="creditToggle" class="btn-credit-toggle" title="크레딧 보기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </button>
             </div>
         </header>
 
@@ -33,6 +74,10 @@
             <section class="library-reader">
                 <div class="preview-header">
                     <h2 id="readerTitle">Reader</h2>
+                    <div class="library-reader-actions">
+                        <button id="readSelectedChapter" class="btn-edit-page" style="display: none;">읽기</button>
+                        <button id="editSelectedChapter" class="btn-ghost library-edit-button" style="display: none;">작품 편집</button>
+                    </div>
                     <div class="preview-deco"></div>
                 </div>
                 <div id="readerContent" class="preview-content library-reader-content"></div>
@@ -40,7 +85,43 @@
         </main>
     </div>
 
+    <div id="creditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>CREDITS & REFERENCE</h2>
+                <span class="close-credit">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="credit-list">
+                    <div class="credit-item">
+                        <span class="credit-role">INSPIRED BY</span>
+                        <a href="https://arca.live/b/characterai/143509698" target="_blank" class="credit-link">Viewer Extension</a>
+                        <a href="https://arca.live/b/characterai/151793818" target="_blank" class="credit-link">LOG ATELIER WEB</a>
+                        <a href="https://arca.live/b/characterai/120217477" target="_blank" class="credit-link">Log Generator Pro 1.1</a>
+                        <a href="https://arca.live/b/characterai/157048976" target="_blank" class="credit-link">Log Studio</a>
+                        <a href="https://arca.live/b/characterai/159949150" target="_blank" class="credit-link">Logs of Glenna</a>
+                        <a href="https://arca.live/b/characterai/161701867" target="_blank" class="credit-link">소개글 좆간지나게 작성하는 법</a>
+                    </div>
+                    <div class="credit-item">
+                        <span class="credit-role">ASSETS</span>
+                        <a href="https://pixabay.com/ko/sound-effects/%ec%9e%90%ec%97%b0-rain-sound-and-forest-and-nature-sounds-18259/"
+                            target="_blank" class="credit-link">Pixabay: Rain Sound and Forest and Nature Sounds</a>
+                        <a href="https://arca.live/b/characterai/154605913" target="_blank" class="credit-link">4.5F) 얼헌 애니 스샷 그림체 공유</a>
+                    </div>
+                    <div class="credit-item">
+                        <span class="credit-role">SPECIAL THANKS</span>
+                        <span class="credit-text"><a href="https://arca.live/b/characterai" target="_blank"
+                                class="credit-link">아카라이브 AI 채팅 채널</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="notification" class="notification"></div>
+    <audio id="rainAudio" loop>
+        <source src="rain-sound-and-forest-and-nature-sounds-18259.mp3" type="audio/mpeg">
+    </audio>
     <script src="library.js"></script>
 </body>
 
