@@ -16,156 +16,109 @@ function loadFromStorage() {
     }
 }
 
-function loadDefaultSettings() {
-    editorTitle = '';
-
-    const useRoundedQuotes = document.getElementById('useRoundedQuotes');
-    const useTextIndent = document.getElementById('useTextIndent');
-    if (useRoundedQuotes) useRoundedQuotes.checked = true;
-    if (useTextIndent) useTextIndent.checked = false;
-    const preserveLineBreaks = document.getElementById('preserveLineBreaks');
-    if (preserveLineBreaks) preserveLineBreaks.checked = false;
-
-    const coverImage = document.getElementById('coverImage');
-    const coverZoom = document.getElementById('coverZoom');
-    const coverFocusX = document.getElementById('coverFocusX');
-    const coverFocusY = document.getElementById('coverFocusY');
-    const coverArchiveNo = document.getElementById('coverArchiveNo');
-    const coverTitle = document.getElementById('coverTitle');
-    const coverSubtitle = document.getElementById('coverSubtitle');
-    const coverZoomValue = document.getElementById('coverZoomValue');
-    const coverFocusXValue = document.getElementById('coverFocusXValue');
-    const coverFocusYValue = document.getElementById('coverFocusYValue');
-
-    if (coverImage) coverImage.value = 'DefaultCover.png';
-    if (coverZoom) coverZoom.value = 120;
-    if (coverFocusX) coverFocusX.value = 50;
-    if (coverFocusY) coverFocusY.value = 30;
-    if (coverArchiveNo) coverArchiveNo.value = 'ARCHIVE NO.001';
-    if (coverTitle) coverTitle.value = 'Yuzu';
-    if (coverSubtitle) coverSubtitle.value = '귀여운 고양이 메이드';
-    if (coverZoomValue) coverZoomValue.textContent = '120%';
-    if (coverFocusXValue) coverFocusXValue.textContent = '50%';
-    if (coverFocusYValue) coverFocusYValue.textContent = '30%';
-
-    profiles = [
-        {
-            name: 'Yuzu',
-            imageUrl: 'DefaultProfile1.png',
-            zoom: 100,
-            focusX: 50,
-            focusY: 30,
-            desc: ' Profile 1 Description',
-            tag: 'CHAR',
-            color: '#c77d8e'
+function getDefaultEditorData() {
+    return {
+        schemaVersion: EDITOR_DATA_SCHEMA_VERSION,
+        editorTitle: '',
+        useRoundedQuotes: true,
+        useTextIndent: false,
+        preserveLineBreaks: false,
+        coverImage: 'DefaultCover.png',
+        coverAutoFit: true,
+        coverZoom: 120,
+        coverFocusX: 50,
+        coverFocusY: 30,
+        coverArchiveNo: 'ARCHIVE NO.001',
+        coverTitle: 'Yuzu',
+        coverSubtitle: '귀여운 고양이 메이드',
+        summaryText: '',
+        enableComment: false,
+        commentText: '',
+        commentNickname: '',
+        enableTags: true,
+        customColors: {
+            bg: '#ffffff',
+            text: '#2c3e50',
+            em: '#2d5af0',
+            header: '#162a3e',
+            quote1Bg: '#f0f2f5',
+            quote1Text: '#2c3e50',
+            quote2Bg: '#f0f2f5',
+            quote2Text: '#162a3e',
+            tagText: '#6c8da8',
+            divider: '#c8d6e0'
         },
-        {
-            name: 'Jong-won',
-            imageUrl: 'DefaultProfile2.png',
-            zoom: 100,
-            focusX: 50,
-            focusY: 10,
-            desc: 'Profile 2 Description',
-            tag: 'USER',
-            color: '#5a9ace'
-        }
-    ];
-
-    const summaryText = document.getElementById('summaryText');
-    if (summaryText) summaryText.value = '';
-
-    const enableTags = document.getElementById('enableTags');
-    const tagsInputs = document.getElementById('tagsInputs');
-    if (enableTags) enableTags.checked = true;
-    if (tagsInputs) tagsInputs.style.display = 'block';
-    tags = [
-        { name: 'Bot', value: 'Bot', link: '' },
-        { name: 'Model', value: 'Model', link: '' },
-        { name: 'Prompt', value: 'Prompt', link: '' },
-        { name: 'Language', value: 'Eng', link: '' }
-    ];
-
-    const topTheme = document.getElementById('topTheme');
-    if (topTheme) topTheme.value = 'basic';
-
-    setColorInputValue('customBg', '#ffffff');
-    setColorInputValue('customText', '#2c3e50');
-    setColorInputValue('customEm', '#2d5af0');
-    setColorInputValue('customHeader', '#162a3e');
-    setColorInputValue('customQuote1Bg', '#f0f2f5');
-    setColorInputValue('customQuote1Text', '#2c3e50');
-    setColorInputValue('customQuote2Bg', '#f0f2f5');
-    setColorInputValue('customQuote2Text', '#162a3e');
-    setColorInputValue('customTagText', '#6c8da8');
-    setColorInputValue('customDivider', '#c8d6e0');
-
-    pages = [
-        {
-            itemType: 'section',
-            title: 'Section Title',
-            subtitle: 'Story',
-            image: 'DefaultSection.png',
-            focusX: 50,
-            focusY: 40
+        pages: [
+            {
+                itemType: 'section',
+                title: 'Section Title',
+                subtitle: 'Story',
+                image: 'DefaultSection.png',
+                focusX: 50,
+                focusY: 40
+            },
+            {
+                itemType: 'page',
+                type: 'basic',
+                title: 'Page Title',
+                subtitle: 'Page Subtitle',
+                content: '[IMG:DefaultImg.png]\nPage Content',
+                bgImage: null,
+                collapsed: false,
+                useGlobalTags: true,
+                tags: [],
+                headerImage: null,
+                headerFocusX: 50,
+                headerFocusY: 50
+            }
+        ],
+        tags: JSON.parse(JSON.stringify(DEFAULT_TAGS)),
+        replacements: [{ from: '', to: '' }],
+        customThemes: [],
+        profiles: [
+            {
+                name: 'Yuzu',
+                imageUrl: 'DefaultProfile1.png',
+                zoom: 100,
+                focusX: 50,
+                focusY: 30,
+                desc: ' Profile 1 Description',
+                tag: 'CHAR',
+                color: '#c77d8e'
+            },
+            {
+                name: 'Jong-won',
+                imageUrl: 'DefaultProfile2.png',
+                zoom: 100,
+                focusX: 50,
+                focusY: 10,
+                desc: 'Profile 2 Description',
+                tag: 'USER',
+                color: '#5a9ace'
+            }
+        ],
+        localImages: {},
+        textSpacing: {
+            fontSize: textSpacing.fontSize,
+            lineHeight: textSpacing.lineHeight,
+            letterSpacing: textSpacing.letterSpacing,
+            paragraphSpacing: textSpacing.paragraphSpacing,
+            textIndent: textSpacing.textIndent
         },
-        {
-            itemType: 'page',
-            type: 'basic',
-            title: 'Page Title',
-            subtitle: 'Page Subtitle',
-            content: '[IMG:DefaultImg.png]\nPage Content',
-            bgImage: null,
-            collapsed: false,
-            useGlobalTags: true,
-            tags: [],
-            headerImage: null,
-            headerFocusX: 50,
-            headerFocusY: 50
-        }
-    ];
-
-    replacements = [{ from: '', to: '' }];
-    customThemes = [];
-
-    textSpacing = {
-        fontSize: 14.2,
-        lineHeight: 1.7,
-        letterSpacing: -0.5,
-        paragraphSpacing: 10,
-        textIndent: 0
+        headingFontSizes: Object.assign({}, headingFontSizes),
+        fontFamily: 'Noto Serif KR',
+        globalTheme: 'basic',
+        hidePageNumbers: false,
+        enablePageFold: true,
+        showHeaderWhenFoldOff: false,
+        dividerStyle: 'line',
+        dividerCustomText: ''
     };
+}
 
-    const textSizeInput = document.getElementById('textSizeInput');
-    const textSizeSlider = document.getElementById('textSizeSlider');
-    const lineHeightInput = document.getElementById('lineHeightInput');
-    const lineHeightSlider = document.getElementById('lineHeightSlider');
-    const letterSpacingInput = document.getElementById('letterSpacingInput');
-    const letterSpacingSlider = document.getElementById('letterSpacingSlider');
-    const paragraphSpacingInput = document.getElementById('paragraphSpacingInput');
-    const paragraphSpacingSlider = document.getElementById('paragraphSpacingSlider');
-    const textIndentInput = document.getElementById('textIndentInput');
-    const textIndentSlider = document.getElementById('textIndentSlider');
-
-    if (textSizeInput) textSizeInput.value = 14.2;
-    if (textSizeSlider) textSizeSlider.value = 14.2;
-    if (lineHeightInput) lineHeightInput.value = 1.7;
-    if (lineHeightSlider) lineHeightSlider.value = 1.7;
-    if (letterSpacingInput) letterSpacingInput.value = -0.5;
-    if (letterSpacingSlider) letterSpacingSlider.value = -0.5;
-    if (paragraphSpacingInput) paragraphSpacingInput.value = 10;
-    if (paragraphSpacingSlider) paragraphSpacingSlider.value = 10;
-    if (textIndentInput) textIndentInput.value = 0;
-    if (textIndentSlider) textIndentSlider.value = 0;
-
-    fontFamily = 'Noto Serif KR';
-    const fontFamilySelect = document.getElementById('fontFamily');
-    if (fontFamilySelect) fontFamilySelect.value = fontFamily;
-
-    updateTagsList();
-    updateReplacementsList();
-    updatePagesList();
-    updateCustomThemesList();
-    updateProfilesList();
+function loadDefaultSettings() {
+    const data = migrateEditorData(getDefaultEditorData());
+    applyEditorDataToForm(data);
     updatePreview();
 }
 
