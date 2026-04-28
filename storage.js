@@ -216,16 +216,42 @@ function normalizeCustomThemes(value) {
     });
 }
 
-function normalizePages(value) {
+function createMigratedLocalImageRef(dataUrl, imageStore) {
+    const id = 'local_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    imageStore[id] = {
+        dataUrl: dataUrl,
+        name: '',
+        createdAt: new Date().toISOString()
+    };
+    return 'local:' + id;
+}
+
+function migrateLocalImageValueForData(value, imageStore) {
+    if (typeof value === 'string' && value.startsWith('data:image/')) {
+        return createMigratedLocalImageRef(value, imageStore);
+    }
+    return value;
+}
+
+function migrateLocalImagesInTextForData(text, imageStore) {
+    if (typeof text !== 'string' || !text.includes('[IMG:data:image/')) {
+        return text;
+    }
+    return text.replace(/\[IMG:(data:image\/[^\]]+?)\]/g, function (match, dataUrl) {
+        return '[IMG:' + createMigratedLocalImageRef(dataUrl, imageStore) + ']';
+    });
+}
+
+function normalizePages(value, imageStore) {
     const sourcePages = Array.isArray(value) ? value : [];
     return sourcePages.map(function (item) {
         const page = Object.assign({}, item);
         if (!page.itemType) page.itemType = 'page';
         if (page.itemType === 'page') page.collapsed = false;
-        if (page.content) page.content = migrateLocalImagesInText(page.content);
-        if (page.image) page.image = migrateLocalImageValue(page.image);
-        if (page.bgImage) page.bgImage = migrateLocalImageValue(page.bgImage);
-        if (page.headerImage) page.headerImage = migrateLocalImageValue(page.headerImage);
+        if (page.content) page.content = migrateLocalImagesInTextForData(page.content, imageStore);
+        if (page.image) page.image = migrateLocalImageValueForData(page.image, imageStore);
+        if (page.bgImage) page.bgImage = migrateLocalImageValueForData(page.bgImage, imageStore);
+        if (page.headerImage) page.headerImage = migrateLocalImageValueForData(page.headerImage, imageStore);
         if (page.itemType === 'page' && (page.imageWidth === undefined || page.imageWidth === null)) {
             page.imageWidth = 100;
         }
@@ -246,10 +272,10 @@ function normalizeTags(value) {
     return normalizedTags;
 }
 
-function normalizeProfiles(data) {
+function normalizeProfiles(data, imageStore) {
     if (data.profiles && data.profiles.length > 0) {
         return JSON.parse(JSON.stringify(data.profiles)).map(function (profile) {
-            profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
+            profile.imageUrl = migrateLocalImageValueForData(profile.imageUrl, imageStore);
             return profile;
         });
     }
@@ -257,7 +283,7 @@ function normalizeProfiles(data) {
         return [
             {
                 name: data.userName || 'User',
-                imageUrl: migrateLocalImageValue(data.userImageUrl || ''),
+                imageUrl: migrateLocalImageValueForData(data.userImageUrl || '', imageStore),
                 focusX: data.userFocusX !== undefined ? data.userFocusX : 50,
                 focusY: data.userFocusY !== undefined ? data.userFocusY : 30,
                 desc: data.userDesc || '',
@@ -266,7 +292,7 @@ function normalizeProfiles(data) {
             },
             {
                 name: data.charName || 'Char',
-                imageUrl: migrateLocalImageValue(data.charImageUrl || ''),
+                imageUrl: migrateLocalImageValueForData(data.charImageUrl || '', imageStore),
                 focusX: data.charFocusX !== undefined ? data.charFocusX : 50,
                 focusY: data.charFocusY !== undefined ? data.charFocusY : 30,
                 desc: data.charDesc || '',
@@ -281,20 +307,18 @@ function normalizeProfiles(data) {
 function migrateEditorData(rawData, options) {
     const data = cloneData(rawData);
     const fallbackTitle = options && options.fallbackEditorTitle ? options.fallbackEditorTitle : '';
-
-    localImages = data.localImages && typeof data.localImages === 'object' ? data.localImages : {};
+    const imageStore = data.localImages && typeof data.localImages === 'object' ? data.localImages : {};
 
     data.schemaVersion = EDITOR_DATA_SCHEMA_VERSION;
     data.editorTitle = data.editorTitle || fallbackTitle || '';
-    editorTitle = data.editorTitle;
-    data.coverImage = migrateLocalImageValue(data.coverImage || '');
+    data.coverImage = migrateLocalImageValueForData(data.coverImage || '', imageStore);
     data.customColors = normalizeCustomColors(data.customColors);
-    data.pages = normalizePages(data.pages);
+    data.pages = normalizePages(data.pages, imageStore);
     data.tags = normalizeTags(data.tags);
     data.replacements = Array.isArray(data.replacements) ? data.replacements : [];
     data.customThemes = normalizeCustomThemes(data.customThemes);
-    data.profiles = normalizeProfiles(data);
-    data.localImages = localImages;
+    data.profiles = normalizeProfiles(data, imageStore);
+    data.localImages = imageStore;
 
     if (!data.textSpacing) data.textSpacing = {};
     if (!data.headingFontSizes) data.headingFontSizes = {};
