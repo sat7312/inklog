@@ -1889,6 +1889,29 @@ input[type="color"] {
 }
 
 /* 크레딧 토글 버튼 */
+.btn-credit-nav {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-credit-nav svg {
+    width: 26px;
+    height: 26px;
+}
+
+.btn-credit-nav:hover {
+    color: var(--accent-blue);
+}
+
 .btn-credit-toggle {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
