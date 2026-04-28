@@ -11,7 +11,16 @@ function getPreviewData() {
     return ctx;
 }
 
+function updatePanelTitle() {
+    const el = document.getElementById('panelTitle');
+    if (!el) return;
+    const title = (editorTitle || getInputValue('coverTitle')).trim();
+    el.textContent = title || 'InkLog';
+    document.title = title ? title + ' - InkLog' : 'InkLog';
+}
+
 function updatePreview() {
+    updatePanelTitle();
     const activeTab = document.querySelector('.tab-content.active');
     const preview = document.getElementById('preview');
     if (activeTab && activeTab.id === 'tab-description') {

@@ -4,6 +4,7 @@ function loadFromStorage() {
         if (saved) {
             const data = JSON.parse(saved);
             localImages = data.localImages || {};
+            editorTitle = data.editorTitle || getEditingChapterTitle() || '';
             data.coverImage = migrateLocalImageValue(data.coverImage);
 
             const useRoundedQuotes = document.getElementById('useRoundedQuotes');
@@ -257,6 +258,8 @@ function loadFromStorage() {
 }
 
 function loadDefaultSettings() {
+    editorTitle = '';
+
     const useRoundedQuotes = document.getElementById('useRoundedQuotes');
     const useTextIndent = document.getElementById('useTextIndent');
     if (useRoundedQuotes) useRoundedQuotes.checked = true;
@@ -410,6 +413,7 @@ function loadDefaultSettings() {
 
 function collectEditorData(extraData) {
     return {
+        editorTitle: editorTitle,
         useRoundedQuotes: getCheckedValue('useRoundedQuotes'),
         useTextIndent: getCheckedValue('useTextIndent'),
         preserveLineBreaks: getCheckedValue('preserveLineBreaks'),
@@ -461,9 +465,49 @@ function collectEditorData(extraData) {
     };
 }
 
+function getEditingChapterTitle() {
+    try {
+        const editingId = localStorage.getItem(EDITING_CHAPTER_KEY);
+        if (!editingId) return '';
+        const saved = localStorage.getItem(CHAPTER_LIBRARY_STORAGE_KEY);
+        const chapters = saved ? JSON.parse(saved) : [];
+        const chapter = chapters.find(function (item) { return item.id === editingId; });
+        return chapter ? (chapter.title || '') : '';
+    } catch (e) {
+        return '';
+    }
+}
+
+let _saveIndicatorTimer = null;
+let _suppressDirtyIndicator = false;
+
+function setSaveIndicator(text, state) {
+    const el = document.getElementById('saveIndicator');
+    if (!el) return;
+    clearTimeout(_saveIndicatorTimer);
+    el.textContent = text;
+    el.classList.remove('saved', 'dirty');
+    if (state) el.classList.add(state);
+    el.classList.add('visible');
+}
+
+function showSavedIndicator() {
+    setSaveIndicator('✓ 저장됨', 'saved');
+    clearTimeout(_saveIndicatorTimer);
+    _saveIndicatorTimer = setTimeout(function () {
+        const el = document.getElementById('saveIndicator');
+        if (el) el.classList.remove('visible');
+    }, 1500);
+}
+
+function showDirtyIndicator() {
+    setSaveIndicator('수정됨', 'dirty');
+}
+
 function saveToStorage() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(collectEditorData()));
+        if (!_suppressDirtyIndicator) showDirtyIndicator();
     } catch (e) {
         console.error('Failed to save to storage:', e);
     }
@@ -477,7 +521,7 @@ function saveChapterToLibrary() {
 
     const defaultTitle = existingChapter
         ? existingChapter.title
-        : (getInputValue('coverTitle') || getInputValue('pageTitle') || 'Untitled Chapter');
+        : (editorTitle || getInputValue('coverTitle') || getInputValue('pageTitle') || 'Untitled Chapter');
 
     const modal = document.getElementById('saveChapterModal');
     const input = document.getElementById('saveChapterTitleInput');
@@ -490,6 +534,8 @@ function saveChapterToLibrary() {
         if (!title) return;
         modal.style.display = 'none';
         try {
+            editorTitle = title;
+
             const now = new Date().toISOString();
             const data = collectEditorData();
             if (existingChapter) {
@@ -502,6 +548,11 @@ function saveChapterToLibrary() {
                 existingChapter.data = data;
                 existingChapter.updatedAt = now;
                 localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
+                _suppressDirtyIndicator = true;
+                saveToStorage();
+                _suppressDirtyIndicator = false;
+                updatePreview();
+                showSavedIndicator();
                 showNotification('작품이 업데이트되었습니다.');
             } else {
                 const chapter = {
@@ -519,9 +570,15 @@ function saveChapterToLibrary() {
                 chapters.unshift(chapter);
                 localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
                 localStorage.setItem(EDITING_CHAPTER_KEY, chapter.id);
+                _suppressDirtyIndicator = true;
+                saveToStorage();
+                _suppressDirtyIndicator = false;
+                updatePreview();
+                showSavedIndicator();
                 showNotification('챕터가 작품 선택 페이지에 저장되었습니다.');
             }
         } catch (error) {
+            _suppressDirtyIndicator = false;
             console.error('Chapter save failed:', error);
             showNotification('챕터 저장 실패: ' + error.message);
         }
@@ -563,6 +620,7 @@ function resetCurrentData() {
     replacements = [];
     profiles = [];
     localImages = {};
+    editorTitle = '';
     currentEditingIndex = null;
     tempPageTags = [];
     globalTheme = 'basic';
@@ -690,6 +748,8 @@ function importDataFromJSON(file) {
             }
 
             if (!confirm('현재 작업 중인 데이터가 모두 사라집니다. 불러오시겠습니까?')) return;
+
+            editorTitle = data.editorTitle || '';
 
             if (data.useRoundedQuotes !== undefined) document.getElementById('useRoundedQuotes').checked = data.useRoundedQuotes;
             if (data.useTextIndent !== undefined) document.getElementById('useTextIndent').checked = data.useTextIndent;

@@ -1,12 +1,11 @@
 // Constants, showNotification, escapeHtml, applyTheme, setupThemeToggle,
-// setupSoundToggle, setupCreditModal are defined in common.js
+// setupCreditModal are defined in common.js
 
 let chapters = [];
 let selectedChapterId = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     setupThemeToggle();
-    setupSoundToggle();
     setupCreditModal();
     setupPanelToggle();
     setupLibraryControls();
@@ -231,7 +230,8 @@ function editChapter(id) {
         return;
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chapter.data));
+    const editorData = Object.assign({}, chapter.data, { editorTitle: chapter.title || chapter.data.editorTitle || '' });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(editorData));
     localStorage.setItem(EDITING_CHAPTER_KEY, id);
     window.location.href = 'editor.html';
 }

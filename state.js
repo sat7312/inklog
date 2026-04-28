@@ -13,6 +13,7 @@ let dividerStyle = 'line';
 let dividerCustomText = '';
 let localImages = {};
 let transientExpandedPageIndexes = [];
+let editorTitle = '';
 
 const PROFILE_COLOR_PRESETS = [
     '#c77d8e', '#5a9ace', '#6b8e65', '#d4a841',
