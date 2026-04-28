@@ -73,14 +73,6 @@
                 </button>
 
             </div>
-            <div class="nav-footer">
-                <button id="copyToClipboard" class="btn-icon-only" title="HTML 복사">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                </button>
-            </div>
         </nav>
 
         <!-- 에디터 패널 (탭 컨텐츠) -->
@@ -720,6 +712,14 @@
                 </div>
 
                 <div class="sub-section">
+                    <h3>HTML EXPORT</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">현재 작업 내용을 HTML 코드로 복사합니다.</p>
+                    <button id="copyToClipboard" class="btn-ghost full-width">
+                        <span>📋 HTML 복사</span>
+                    </button>
+                </div>
+
+                <div class="sub-section">
                     <h3>DATA MANAGEMENT</h3>
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">현재 브라우저에 저장된 모든 데이터를 JSON
                         파일로 저장하거나 불러올 수 있습니다.</p>
@@ -944,6 +944,26 @@
                         <a href="https://arca.live/b/characterai" target="_blank" class="credit-link">아카라이브 AI 채팅 채널</a>
                         <a href="https://arca.live/b/characterai/161701867" target="_blank" class="credit-link">Log Diary</a>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 챕터 저장 모달 -->
+    <div id="saveChapterModal" class="modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2>SAVE CHAPTER</h2>
+                <span class="close" id="saveChapterModalClose">&times;</span>
+            </div>
+            <div class="modal-body">
+                <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; display: block;">챕터 제목</label>
+                <div style="display: flex; gap: 10px; align-items: stretch;">
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                        <input type="text" id="saveChapterTitleInput" placeholder=" ">
+                        <span class="focus-border"></span>
+                    </div>
+                    <button id="saveChapterConfirm" class="btn-accent" style="flex: 0 0 auto; width: auto; padding: 0 18px; white-space: nowrap;">저장</button>
                 </div>
             </div>
         </div>

@@ -1108,7 +1108,7 @@ function generateHTML(ctx, isPreview) {
                 topContent += '<div style="padding-top: ' + topPadding + ';"></div>';
             }
             topContent += '<div style="padding: 0 clamp(20px, 3vw, 25px) 5px clamp(20px, 3vw, 25px); text-align: center;">';
-            topContent += '<span style="display: inline-block; font-size: clamp(11px, 2vw, 13px); font-weight: 600; letter-spacing: clamp(1.5px, 0.3vw, 2px); color: ' + theme.headerText + '; text-transform: uppercase; border-bottom: 1px solid ' + theme.headerText + '; padding-bottom: 5px; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">Story So Far</span>';
+            topContent += '<span style="display: inline-block; font-size: clamp(11px, 2vw, 13px); font-weight: 600; letter-spacing: clamp(1.5px, 0.3vw, 2px); color: ' + theme.headerText + '; text-transform: uppercase; border-bottom: 1px solid ' + theme.headerText + '; padding-bottom: 5px; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">Synopsis</span>';
             topContent += '</div>';
             topContent += '<div style="padding: 10px clamp(30px, 5vw, 50px) 10px clamp(30px, 5vw, 50px);">' + parseText(summaryText, theme, true, true, 100, ctx) + '</div>';
         }

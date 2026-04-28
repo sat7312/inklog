@@ -1625,54 +1625,89 @@ function setupEventListeners() {
 }
 
 function saveChapterToLibrary() {
-    try {
-        const saved = localStorage.getItem(CHAPTER_LIBRARY_STORAGE_KEY);
-        const chapters = saved ? JSON.parse(saved) : [];
-        const editingId = localStorage.getItem(EDITING_CHAPTER_KEY);
-        const existingChapter = editingId ? chapters.find(function (c) { return c.id === editingId; }) : null;
+    const saved = localStorage.getItem(CHAPTER_LIBRARY_STORAGE_KEY);
+    const chapters = saved ? JSON.parse(saved) : [];
+    const editingId = localStorage.getItem(EDITING_CHAPTER_KEY);
+    const existingChapter = editingId ? chapters.find(function (c) { return c.id === editingId; }) : null;
 
-        const defaultTitle = existingChapter
-            ? existingChapter.title
-            : (getInputValue('coverTitle') || getInputValue('pageTitle') || 'Untitled Chapter');
-        const title = prompt('저장할 챕터 제목을 입력하세요:', defaultTitle);
-        if (title === null || title.trim() === '') return;
+    const defaultTitle = existingChapter
+        ? existingChapter.title
+        : (getInputValue('coverTitle') || getInputValue('pageTitle') || 'Untitled Chapter');
 
-        const now = new Date().toISOString();
+    const modal = document.getElementById('saveChapterModal');
+    const input = document.getElementById('saveChapterTitleInput');
+    input.value = defaultTitle;
+    modal.style.display = 'flex';
+    setTimeout(function () { input.focus(); input.select(); }, 50);
 
-        const data = collectEditorData();
-        if (existingChapter) {
-            existingChapter.title = title.trim();
-            existingChapter.subtitle = getInputValue('coverSubtitle');
-            existingChapter.summary = getInputValue('summaryText');
-            existingChapter.coverImage = getInputValue('coverImage');
-            existingChapter.descriptionHtml = generateIntroHTML(data);
-            existingChapter.html = generateHTML(data, false);
-            existingChapter.data = data;
-            existingChapter.updatedAt = now;
-            localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
-            showNotification('작품이 업데이트되었습니다.');
-        } else {
-            const chapter = {
-                id: 'chapter_' + Date.now(),
-                title: title.trim(),
-                subtitle: getInputValue('coverSubtitle'),
-                summary: getInputValue('summaryText'),
-                coverImage: getInputValue('coverImage'),
-                descriptionHtml: generateIntroHTML(data),
-                html: generateHTML(data, false),
-                data: data,
-                createdAt: now,
-                updatedAt: now
-            };
-            chapters.unshift(chapter);
-            localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
-            localStorage.setItem(EDITING_CHAPTER_KEY, chapter.id);
-            showNotification('챕터가 작품 선택 페이지에 저장되었습니다.');
+    function doSave() {
+        const title = input.value.trim();
+        if (!title) return;
+        modal.style.display = 'none';
+        try {
+            const now = new Date().toISOString();
+            const data = collectEditorData();
+            if (existingChapter) {
+                existingChapter.title = title;
+                existingChapter.subtitle = getInputValue('coverSubtitle');
+                existingChapter.summary = getInputValue('summaryText');
+                existingChapter.coverImage = getInputValue('coverImage');
+                existingChapter.descriptionHtml = generateIntroHTML(data);
+                existingChapter.html = generateHTML(data, false);
+                existingChapter.data = data;
+                existingChapter.updatedAt = now;
+                localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
+                showNotification('작품이 업데이트되었습니다.');
+            } else {
+                const chapter = {
+                    id: 'chapter_' + Date.now(),
+                    title: title,
+                    subtitle: getInputValue('coverSubtitle'),
+                    summary: getInputValue('summaryText'),
+                    coverImage: getInputValue('coverImage'),
+                    descriptionHtml: generateIntroHTML(data),
+                    html: generateHTML(data, false),
+                    data: data,
+                    createdAt: now,
+                    updatedAt: now
+                };
+                chapters.unshift(chapter);
+                localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
+                localStorage.setItem(EDITING_CHAPTER_KEY, chapter.id);
+                showNotification('챕터가 작품 선택 페이지에 저장되었습니다.');
+            }
+        } catch (error) {
+            console.error('Chapter save failed:', error);
+            showNotification('챕터 저장 실패: ' + error.message);
         }
-    } catch (error) {
-        console.error('Chapter save failed:', error);
-        showNotification('챕터 저장 실패: ' + error.message);
+        cleanup();
     }
+
+    function doCancel() {
+        modal.style.display = 'none';
+        cleanup();
+    }
+
+    function onKeydown(e) {
+        if (e.key === 'Enter') doSave();
+        if (e.key === 'Escape') doCancel();
+    }
+
+    function cleanup() {
+        document.getElementById('saveChapterConfirm').removeEventListener('click', doSave);
+        document.getElementById('saveChapterModalClose').removeEventListener('click', doCancel);
+        input.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onOverlayClick);
+    }
+
+    function onOverlayClick(e) {
+        if (e.target === modal) doCancel();
+    }
+
+    document.getElementById('saveChapterConfirm').addEventListener('click', doSave);
+    document.getElementById('saveChapterModalClose').addEventListener('click', doCancel);
+    input.addEventListener('keydown', onKeydown);
+    modal.addEventListener('click', onOverlayClick);
 }
 
 // 현재 작업 내용 초기화 (프리셋·커스텀 테마는 유지)
