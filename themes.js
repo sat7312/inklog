@@ -12,8 +12,9 @@ function addCustomTheme() {
         bg: getColorValue('customBg'),
         text: getColorValue('customText'),
         em: getColorValue('customEm'),
-        line: getColorValue('customLine'),
-        headerText: getColorValue('customHeaderText'),
+        header: getColorValue('customHeader'),
+        headerText: getColorValue('customHeader'),
+        line: getColorValue('customHeader'),
         quote1Bg: getColorValue('customQuote1Bg'),
         quote1Text: getColorValue('customQuote1Text'),
         quote2Bg: getColorValue('customQuote2Bg'),
@@ -36,9 +37,10 @@ function updateCustomThemesList() {
     customThemes.forEach(function (theme, index) {
         const themeItem = document.createElement('div');
         themeItem.className = 'custom-theme-item';
+        const headerColor = theme.header || theme.line || theme.headerText || theme.text || '#000000';
         themeItem.innerHTML =
             '<span class="theme-name">' + theme.name + '</span>' +
-            '<span class="theme-preview" style="background-color: ' + theme.bg + '; border: 1px solid ' + theme.line + ';"></span>' +
+            '<span class="theme-preview" style="background-color: ' + theme.bg + '; border: 1px solid ' + headerColor + ';"></span>' +
             '<div class="theme-actions">' +
                 '<button class="btn-load-theme" data-index="' + index + '">불러오기</button>' +
                 '<button class="btn-overwrite-theme" data-index="' + index + '">덮어쓰기</button>' +
@@ -77,8 +79,7 @@ function loadCustomTheme(index) {
     setColorInputValue('customBg', theme.bg);
     setColorInputValue('customText', theme.text);
     setColorInputValue('customEm', theme.em);
-    setColorInputValue('customLine', theme.line);
-    setColorInputValue('customHeaderText', theme.headerText);
+    setColorInputValue('customHeader', theme.header || theme.line || theme.headerText || theme.text || '#333333');
     setColorInputValue('customQuote1Bg', theme.quote1Bg);
     setColorInputValue('customQuote1Text', theme.quote1Text);
     setColorInputValue('customQuote2Bg', theme.quote2Bg);
@@ -101,8 +102,9 @@ function overwriteCustomTheme(index) {
         bg: getColorValue('customBg'),
         text: getColorValue('customText'),
         em: getColorValue('customEm'),
-        line: getColorValue('customLine'),
-        headerText: getColorValue('customHeaderText'),
+        header: getColorValue('customHeader'),
+        headerText: getColorValue('customHeader'),
+        line: getColorValue('customHeader'),
         quote1Bg: getColorValue('customQuote1Bg'),
         quote1Text: getColorValue('customQuote1Text'),
         quote2Bg: getColorValue('customQuote2Bg'),

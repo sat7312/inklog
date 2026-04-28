@@ -264,7 +264,15 @@ function getTheme(type, ctx) {
     if (type && type.startsWith('customTheme_')) {
         const index = parseInt(type.split('_')[1]);
         if (ctx.customThemes && ctx.customThemes[index]) {
-            return ctx.customThemes[index];
+            const theme = ctx.customThemes[index];
+            const headerColor = theme.header || theme.line || theme.headerText || theme.text || '#333333';
+            return Object.assign({}, theme, {
+                header: headerColor,
+                headerText: theme.headerText || headerColor,
+                line: theme.line || headerColor,
+                tagText: theme.tagText || theme.text,
+                divider: theme.divider || theme.tagText || theme.text
+            });
         }
     }
     if (STYLES[type]) return STYLES[type];

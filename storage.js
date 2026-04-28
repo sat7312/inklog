@@ -332,8 +332,7 @@ function loadDefaultSettings() {
     setColorInputValue('customBg', '#ffffff');
     setColorInputValue('customText', '#2c3e50');
     setColorInputValue('customEm', '#2d5af0');
-    setColorInputValue('customLine', '#2c3e50');
-    setColorInputValue('customHeaderText', '#162a3e');
+    setColorInputValue('customHeader', '#162a3e');
     setColorInputValue('customQuote1Bg', '#f0f2f5');
     setColorInputValue('customQuote1Text', '#2c3e50');
     setColorInputValue('customQuote2Bg', '#f0f2f5');
