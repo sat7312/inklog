@@ -53,6 +53,10 @@ function hasSelectedQuoteTargets() {
     return selectedQuoteTargets.length > 0;
 }
 
+function getProfileDisplayName(profile, index) {
+    return (profile && (profile.name || profile.tag)) || ('PROFILE #' + (index + 1));
+}
+
 function getQuoteAssignedProfileIndex(target) {
     const pageIndex = target.pageIndex;
     if (pageIndex < 0 || pageIndex >= pages.length || !pages[pageIndex]) return null;
@@ -81,7 +85,7 @@ function getQuoteAssignmentSummary(targets) {
         return index === firstIndex;
     });
     const profile = profiles[firstIndex] || {};
-    const profileName = profile.name || profile.tag || ('Profile ' + (firstIndex + 1));
+    const profileName = getProfileDisplayName(profile, firstIndex);
 
     if (allSame) {
         return {
@@ -276,13 +280,12 @@ function openQuoteCharacterMenu(target) {
     menu.appendChild(current);
 
     profiles.forEach(function (profile, index) {
-        if (!profile.name && !profile.tag) return;
         const item = document.createElement('button');
         item.type = 'button';
         item.className = 'quote-character-option';
         item.innerHTML =
             '<span class="quote-character-swatch" style="background:' + (profile.color || '#5a9ace') + ';"></span>' +
-            '<span>' + escapeHtml(profile.name || profile.tag || ('Profile ' + (index + 1))) + '</span>';
+            '<span>' + escapeHtml(getProfileDisplayName(profile, index)) + '</span>';
         item.addEventListener('click', function () {
             applyQuoteCharacterBatch(selectedQuoteTargets.slice(), index);
             closeQuoteCharacterMenu();
