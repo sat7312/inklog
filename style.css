@@ -1127,9 +1127,9 @@ button {
 .quote-character-menu-side {
     position: sticky;
     top: 12px;
-    float: right;
-    clear: right;
-    margin: 0 0 12px 12px;
+    float: left;
+    clear: left;
+    margin: 0 12px 12px -188px;
 }
 
 .quote-character-menu-inline {
@@ -1183,14 +1183,27 @@ button {
     color: var(--danger);
 }
 
-.quote-character-clear-icon {
+.quote-character-deselect {
+    color: var(--text-muted);
+}
+
+.quote-character-clear-icon,
+.quote-character-deselect-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(231, 76, 60, 0.12);
-    color: var(--danger);
     font-size: 12px;
     line-height: 1;
+}
+
+.quote-character-clear-icon {
+    background: rgba(231, 76, 60, 0.12);
+    color: var(--danger);
+}
+
+.quote-character-deselect-icon {
+    background: var(--bg-secondary);
+    color: var(--text-muted);
 }
 
 /* 페이지 삭제 버튼 */

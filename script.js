@@ -89,7 +89,6 @@ function setupEventListeners() {
         preview.addEventListener('click', function (event) {
             const quote = event.target.closest('.js-quote-assign');
             if (!quote) {
-                closeQuoteCharacterMenu();
                 return;
             }
             event.preventDefault();

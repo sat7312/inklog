@@ -164,6 +164,11 @@ function closeQuoteCharacterMenu() {
     clearSelectedQuoteTargets();
 }
 
+function removeQuoteCharacterMenuOnly() {
+    const existing = document.getElementById('quoteCharacterMenu');
+    if (existing) existing.remove();
+}
+
 function getQuoteMenuHost(target) {
     const preview = document.getElementById('preview');
     const details = target.closest('details');
@@ -191,7 +196,7 @@ function placeQuoteCharacterMenu(menu, target) {
 
     const hostRect = host.getBoundingClientRect();
     const previewRect = preview ? preview.getBoundingClientRect() : document.documentElement.getBoundingClientRect();
-    const sideSpace = previewRect.right - hostRect.right;
+    const sideSpace = hostRect.left - previewRect.left;
     if (sideSpace >= 220) {
         menu.classList.add('quote-character-menu-side');
     } else {
@@ -246,6 +251,19 @@ function openQuoteCharacterMenu(target) {
         showNotification(selectedCount + '개 대사 색상이 해제되었습니다.');
     });
     menu.appendChild(clearButton);
+
+    const deselectButton = document.createElement('button');
+    deselectButton.type = 'button';
+    deselectButton.className = 'quote-character-option quote-character-deselect';
+    deselectButton.innerHTML =
+        '<span class="quote-character-swatch quote-character-deselect-icon">□</span>' +
+        '<span>전체 선택 해제</span>';
+    deselectButton.addEventListener('click', function () {
+        removeQuoteCharacterMenuOnly();
+        clearSelectedQuoteTargets();
+        showNotification('대사 선택이 해제되었습니다.');
+    });
+    menu.appendChild(deselectButton);
 
     placeQuoteCharacterMenu(menu, target);
 }
