@@ -218,6 +218,20 @@ function escapeAttr(value) {
     });
 }
 
+function escapeText(value) {
+    return escapeAttr(value);
+}
+
+function escapeCssUrl(value) {
+    return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, '');
+}
+
+function escapeHref(value) {
+    const href = String(value || '').trim();
+    if (!href || /^(javascript|data):/i.test(href)) return '';
+    return escapeAttr(href);
+}
+
 function normalizeImageUrl(url) {
     if (!url || !url.trim()) return '';
     const trimmed = url.trim();
@@ -523,9 +537,9 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
                             'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl)
                         ];
                         const proxyList = proxies.join('|');
-                        html += '<div style="text-align: center; margin: 20px 0;"><img src="' + imageUrl + '" style="' + imgStyle + '" data-original="' + originalUrl + '" data-proxies="' + proxyList + '" data-proxy-index="0" onerror="(function(img){var proxies=img.dataset.proxies.split(\'|\');var idx=parseInt(img.dataset.proxyIndex||0);if(idx<proxies.length-1){img.dataset.proxyIndex=idx+1;img.src=proxies[idx+1];}else{img.style.display=\'none\';};})(this)"></div>';
+                        html += '<div style="text-align: center; margin: 20px 0;"><img src="' + escapeAttr(imageUrl) + '" style="' + imgStyle + '" data-original="' + escapeAttr(originalUrl) + '" data-proxies="' + escapeAttr(proxyList) + '" data-proxy-index="0" onerror="(function(img){var proxies=img.dataset.proxies.split(\'|\');var idx=parseInt(img.dataset.proxyIndex||0);if(idx<proxies.length-1){img.dataset.proxyIndex=idx+1;img.src=proxies[idx+1];}else{img.style.display=\'none\';};})(this)"></div>';
                     } else {
-                        html += '<div style="text-align: center; margin: 20px 0;"><img src="' + imageUrl + '" style="' + imgStyle + '" onerror="this.style.display=\'none\'"></div>';
+                        html += '<div style="text-align: center; margin: 20px 0;"><img src="' + escapeAttr(imageUrl) + '" style="' + imgStyle + '" onerror="this.style.display=\'none\'"></div>';
                     }
                 }
                 continue;
@@ -552,7 +566,7 @@ function parseText(text, themeStyle, skipIndent, reduceParagraphSpacing, imageWi
                 cross:    '<div style="text-align:center;margin:20px auto;color:' + hrColor + ';font-size:' + fontSize + ';">† ─── † ─── †</div>',
             };
             if (ctx.dividerStyle === 'custom' && ctx.dividerCustomText) {
-                html += '<div style="text-align:center;margin:20px auto;color:' + hrColor + ';font-size:' + fontSize + ';">' + ctx.dividerCustomText + '</div>';
+                html += '<div style="text-align:center;margin:20px auto;color:' + hrColor + ';font-size:' + fontSize + ';">' + escapeText(ctx.dividerCustomText) + '</div>';
             } else {
                 html += dividerContents[ctx.dividerStyle] || dividerContents.line;
             }
@@ -745,6 +759,8 @@ function createHeader(text, themeStyle, headerImage, headerFocusX, headerFocusY,
     } else {
         pageTitle = titlePart;
     }
+    const escapedPageTitle = escapeText(pageTitle);
+    const escapedPageSubtitle = escapeText(pageSubtitle);
 
     const hasHeaderImage = headerImage && typeof headerImage === 'string' && headerImage.trim();
     const numberColor = hasHeaderImage ? '#ffffff' : themeStyle.header;
@@ -761,10 +777,10 @@ function createHeader(text, themeStyle, headerImage, headerFocusX, headerFocusY,
         headerHtml += '<div style="flex: 1 1 0; min-width: 0;">';
         if (pageTitle) {
             const titleMargin = pageSubtitle ? ' margin-bottom: 4px;' : '';
-            headerHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.pageHeaderTitle) + '; font-weight: 700; color: ' + titleColor + ';' + titleMargin + ' font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.3;">' + pageTitle + '</div>';
+            headerHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.pageHeaderTitle) + '; font-weight: 700; color: ' + titleColor + ';' + titleMargin + ' font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.3;">' + escapedPageTitle + '</div>';
         }
         if (pageSubtitle) {
-            headerHtml += '<div style="font-size: ' + pxToClamp(Math.round(ctx.headingFontSizes.pageHeaderTitle * 0.8)) + '; color: ' + subtitleColor + '; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.4;">' + pageSubtitle + '</div>';
+            headerHtml += '<div style="font-size: ' + pxToClamp(Math.round(ctx.headingFontSizes.pageHeaderTitle * 0.8)) + '; color: ' + subtitleColor + '; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.4;">' + escapedPageSubtitle + '</div>';
         }
         headerHtml += '</div>';
         headerHtml += '</div>';
@@ -772,10 +788,10 @@ function createHeader(text, themeStyle, headerImage, headerFocusX, headerFocusY,
         headerHtml += '<div style="padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 50px);">';
         if (pageTitle) {
             const titleMarginNoNum = pageSubtitle ? ' margin-bottom: 4px;' : '';
-            headerHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.pageHeaderTitle) + '; font-weight: 700; color: ' + titleColor + ';' + titleMarginNoNum + ' font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.3;">' + pageTitle + '</div>';
+            headerHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.pageHeaderTitle) + '; font-weight: 700; color: ' + titleColor + ';' + titleMarginNoNum + ' font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.3;">' + escapedPageTitle + '</div>';
         }
         if (pageSubtitle) {
-            headerHtml += '<div style="font-size: ' + pxToClamp(Math.round(ctx.headingFontSizes.pageHeaderTitle * 0.8)) + '; color: ' + subtitleColor + '; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.4;">' + pageSubtitle + '</div>';
+            headerHtml += '<div style="font-size: ' + pxToClamp(Math.round(ctx.headingFontSizes.pageHeaderTitle * 0.8)) + '; color: ' + subtitleColor + '; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.4;">' + escapedPageSubtitle + '</div>';
         }
         headerHtml += '</div>';
     } else if (ctx.hidePageNumbers && pageNum) {
@@ -784,7 +800,7 @@ function createHeader(text, themeStyle, headerImage, headerFocusX, headerFocusY,
         headerHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.pageHeaderTitle) + '; font-weight: 700; color: ' + titleColor + '; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; line-height: 1.3;">Page ' + pageNumber + '</div>';
         headerHtml += '</div>';
     } else {
-        const displayContent = text ? text.toUpperCase() : '';
+        const displayContent = text ? escapeText(text.toUpperCase()) : '';
         const headerStyle = 'text-align: center; font-size: ' + pxToClamp(ctx.headingFontSizes.pageHeaderTitle) + '; letter-spacing: clamp(2px, 0.5vw, 4px); font-weight: 600; color: ' + titleColor + '; margin-bottom: 0; padding: clamp(15px, 3vw, 20px) 0; line-height: 1; white-space: nowrap;';
         const lineStyle = 'display: inline-block; width: clamp(25px, 5vw, 40px); height: 0px; border-top: 1px solid ' + titleColor + '; vertical-align: middle; font-size: 0px; line-height: 0px;';
         const textWrapperStyle = 'display: inline-block; margin: 0 clamp(10px, 2vw, 15px); vertical-align: middle;';
@@ -799,7 +815,7 @@ function createHeader(text, themeStyle, headerImage, headerFocusX, headerFocusY,
         const focusX = headerFocusX || 50;
         const focusY = headerFocusY || 50;
         const normalizedHeaderImage = resolveImageUrl(headerImage, ctx);
-        const bannerStyle = 'width: calc(100% + clamp(30px, 6vw, 60px)); margin: 0 -' + 'clamp(15px, 3vw, 30px)' + '; height: 100px; background: url(\'' + normalizedHeaderImage + '\') ' + focusX + '% ' + focusY + '% / cover no-repeat; margin-bottom: 20px; margin-top: -20px;';
+        const bannerStyle = 'width: calc(100% + clamp(30px, 6vw, 60px)); margin: 0 -' + 'clamp(15px, 3vw, 30px)' + '; height: 100px; background: url(\'' + escapeCssUrl(normalizedHeaderImage) + '\') ' + focusX + '% ' + focusY + '% / cover no-repeat; margin-bottom: 20px; margin-top: -20px;';
         headerHtml += '<div style="' + bannerStyle + '"></div>';
     }
 
@@ -824,7 +840,7 @@ function createCommentSection(commentText, commentNickname, themeStyle, ctx) {
     const dateStr = today.getFullYear() + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + String(today.getDate()).padStart(2, '0');
     commentHtml += '<div style="text-align: right; padding: clamp(10px, 2vw, 15px) clamp(30px, 5vw, 50px) 0 clamp(30px, 5vw, 50px); font-size: clamp(9px, 1.5vw, 10px); color: ' + (themeStyle.tagText || themeStyle.text) + '; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">';
     if (commentNickname && commentNickname.trim()) {
-        commentHtml += 'BY ' + commentNickname + ' • ' + dateStr;
+        commentHtml += 'BY ' + escapeText(commentNickname) + ' • ' + dateStr;
     } else {
         commentHtml += dateStr;
     }
@@ -868,8 +884,8 @@ function createSoundtrackSection(youtubeUrl, songTitle, artistName, themeStyle, 
     html += '</div>';
     if (songTitle || artistName) {
         html += '<div style="max-width: 300px; margin: clamp(12px, 2.5vw, 18px) auto 0; text-align: center;">';
-        if (songTitle) html += '<div style="font-size: clamp(13px, 2.5vw, 15px); font-weight: 600; color: ' + (themeStyle.header || themeStyle.text) + '; line-height: 1.4; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">' + songTitle + '</div>';
-        if (artistName) html += '<div style="font-size: clamp(11px, 2vw, 12px); color: ' + (themeStyle.tagText || '#888') + '; margin-top: 4px; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">' + artistName + '</div>';
+        if (songTitle) html += '<div style="font-size: clamp(13px, 2.5vw, 15px); font-weight: 600; color: ' + (themeStyle.header || themeStyle.text) + '; line-height: 1.4; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">' + escapeText(songTitle) + '</div>';
+        if (artistName) html += '<div style="font-size: clamp(11px, 2vw, 12px); color: ' + (themeStyle.tagText || '#888') + '; margin-top: 4px; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';">' + escapeText(artistName) + '</div>';
         html += '</div>';
     }
     html += '<div style="max-width: 200px; margin: clamp(15px, 3vw, 22px) auto 0;">';
@@ -900,7 +916,7 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
     if (bgImage) {
         const normalizedBgImage = resolveImageUrl(bgImage, ctx);
         const rgb = hexToRgb(theme.bg);
-        containerStyle = 'box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width: 900px; margin: 5px auto; padding: clamp(15px, 3vw, 30px); border-radius: 1rem; background-image: url(\'' + normalizedBgImage + '\'); background-size: cover; background-position: center; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; font-size: clamp(13px, 2.3vw, 14.2px);';
+        containerStyle = 'box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width: 900px; margin: 5px auto; padding: clamp(15px, 3vw, 30px); border-radius: 1rem; background-image: url(\'' + escapeCssUrl(normalizedBgImage) + '\'); background-size: cover; background-position: center; font-family: \'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + '; font-size: clamp(13px, 2.3vw, 14.2px);';
 
         if (isCollapsed && headerHtml) {
             const headerInBg = '<div style="padding: clamp(15px, 3vw, 20px) 0;">' + headerHtml.replace('margin-bottom: 20px; padding-top: 20px;', 'margin: 0; padding: 0;') + '</div>';
@@ -968,9 +984,9 @@ function generateHTML(ctx, isPreview) {
                 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalCoverUrl)
             ];
             const proxyList = proxies.join('|');
-            html += '<img style="width: 0px; height: 0px;" src="' + coverImageUrl + '" class="fr-fic fr-dii" data-proxies="' + proxyList + '" data-proxy-index="0" onerror="(function(img){var proxies=img.dataset.proxies.split(\'|\');var idx=parseInt(img.dataset.proxyIndex||0);if(idx<proxies.length-1){img.dataset.proxyIndex=idx+1;img.src=proxies[idx+1];}else{img.remove();};})(this)">';
+            html += '<img style="width: 0px; height: 0px;" src="' + escapeAttr(coverImageUrl) + '" class="fr-fic fr-dii" data-proxies="' + escapeAttr(proxyList) + '" data-proxy-index="0" onerror="(function(img){var proxies=img.dataset.proxies.split(\'|\');var idx=parseInt(img.dataset.proxyIndex||0);if(idx<proxies.length-1){img.dataset.proxyIndex=idx+1;img.src=proxies[idx+1];}else{img.remove();};})(this)">';
         } else {
-            html += '<img style="width: 0px; height: 0px;" src="' + coverImageUrl + '" class="fr-fic fr-dii">';
+            html += '<img style="width: 0px; height: 0px;" src="' + escapeAttr(coverImageUrl) + '" class="fr-fic fr-dii">';
         }
     }
 
@@ -982,9 +998,9 @@ function generateHTML(ctx, isPreview) {
         const lineRgb = hexToRgb(theme.line);
         const lineColor = 'rgba(' + lineRgb.r + ', ' + lineRgb.g + ', ' + lineRgb.b + ', 0.6)';
 
-        const coverArchiveNo = ctx.coverArchiveNo || '';
-        const coverTitle = ctx.coverTitle || '';
-        const coverSubtitle = ctx.coverSubtitle || '';
+        const coverArchiveNo = escapeText(ctx.coverArchiveNo || '');
+        const coverTitle = escapeText(ctx.coverTitle || '');
+        const coverSubtitle = escapeText(ctx.coverSubtitle || '');
         const soundtrackUrlCheck = ctx.soundtrackUrl || '';
         const hasRealContent = (enableProfiles && ctx.profiles.length > 0) || summaryText.trim() || (soundtrackUrlCheck && soundtrackUrlCheck.trim());
         const hasCommentSection = ctx.enableComment && ctx.commentText && ctx.commentText.trim();
@@ -1004,7 +1020,7 @@ function generateHTML(ctx, isPreview) {
                     const coverWrapperMarginBottom = hasRealContent ? '30px' : '0';
                     const coverImgBorderRadius = hasRealContent ? '10px 10px 0 0' : '10px 10px 10px 10px';
 
-                    topContent += '<div style="width:100%;margin:0 0 ' + coverWrapperMarginBottom + ' 0;box-sizing:border-box;background-color:#1a1a1a;background-image:url(\'' + normalizedCoverImage + '\');background-size:' + backgroundSize + ';background-position:' + coverFocusX + '% ' + coverFocusY + '%;background-repeat:no-repeat;border-radius:' + coverImgBorderRadius + ';display:table;">';
+                    topContent += '<div style="width:100%;margin:0 0 ' + coverWrapperMarginBottom + ' 0;box-sizing:border-box;background-color:#1a1a1a;background-image:url(\'' + escapeCssUrl(normalizedCoverImage) + '\');background-size:' + backgroundSize + ';background-position:' + coverFocusX + '% ' + coverFocusY + '%;background-repeat:no-repeat;border-radius:' + coverImgBorderRadius + ';display:table;">';
                     topContent += '<div style="display:table-cell;vertical-align:bottom;width:100%;height:min(68.421vw, 615px);min-height:200px;padding:clamp(15px, 3vw, 20px) clamp(30px, 5vw, 40px);box-sizing:border-box;background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 25%, transparent 45%);border-radius:' + coverImgBorderRadius + ';">';
 
                     if (coverArchiveNo) {
@@ -1022,9 +1038,11 @@ function generateHTML(ctx, isPreview) {
                         if (validTags.length > 0) {
                             topContent += '<div style="font-size:0;">';
                             validTags.forEach(function (tag) {
-                                const tagContent = tag.link
-                                    ? '<a href="' + tag.link + '" style="text-decoration:none;color:inherit;">' + tag.value + '</a>'
-                                    : tag.value;
+                                const tagValue = escapeText(tag.value);
+                                const tagHref = escapeHref(tag.link);
+                                const tagContent = tagHref
+                                    ? '<a href="' + tagHref + '" style="text-decoration:none;color:inherit;">' + tagValue + '</a>'
+                                    : tagValue;
                                 const tagStyle = 'display:inline-block;vertical-align:top;background:rgba(255, 255, 255, 0.1);color:#ffffff;padding:' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 0.45)) + ' ' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 1.1)) + ';margin:0 ' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 0.7)) + ' ' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 0.7)) + ' 0;border:1px solid rgba(255, 255, 255, 0.3);font-size:' + pxToClamp(ctx.headingFontSizes.coverTag) + ';font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
                                 topContent += '<span style="' + tagStyle + '">' + tagContent + '</span> ';
                             });
@@ -1049,9 +1067,11 @@ function generateHTML(ctx, isPreview) {
                         if (validTags.length > 0) {
                             topContent += '<div style="font-size:0;margin-top:10px;">';
                             validTags.forEach(function (tag) {
-                                const tagContent = tag.link
-                                    ? '<a href="' + tag.link + '" style="text-decoration:none;color:inherit;">' + tag.value + '</a>'
-                                    : tag.value;
+                                const tagValue = escapeText(tag.value);
+                                const tagHref = escapeHref(tag.link);
+                                const tagContent = tagHref
+                                    ? '<a href="' + tagHref + '" style="text-decoration:none;color:inherit;">' + tagValue + '</a>'
+                                    : tagValue;
                                 const tagStyle = 'display:inline-block;vertical-align:top;background:' + theme.quote1Bg + ';color:' + theme.text + ';padding:' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 0.45)) + ' ' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 1.1)) + ';margin:0 ' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 0.7)) + ' ' + pxToClamp(Math.round(ctx.headingFontSizes.coverTag * 0.7)) + ' 0;border:1px solid ' + theme.divider + ';font-size:' + pxToClamp(ctx.headingFontSizes.coverTag) + ';font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';';
                                 topContent += '<span style="' + tagStyle + '">' + tagContent + '</span> ';
                             });
@@ -1081,7 +1101,7 @@ function generateHTML(ctx, isPreview) {
             topContent += '<div style="' + profileRowStyle + '">';
             ctx.profiles.forEach(function (profile) {
                 const profileImageUrl = resolveImageUrl(profile.imageUrl || '', ctx);
-                const profileColor = profile.color || theme.headerText;
+                const profileColor = /^#[0-9A-Fa-f]{6}$/.test(profile.color || '') ? profile.color : theme.headerText;
                 const hasImage = profileImageUrl.trim() !== '';
                 const hasContent = (profile.name && profile.name.trim()) || (profile.desc && profile.desc.trim());
                 if (hasContent) {
@@ -1092,14 +1112,14 @@ function generateHTML(ctx, isPreview) {
                         topContent += '<div style="' + imgWrapperStyle + '">';
                         const bgPosition = (profile.focusX || 50) + '% ' + (profile.focusY || 30) + '%';
                         const bgSize = (profile.zoom || 100) + '% auto';
-                        topContent += '<div style="' + imgCircleStyleBase + ' background: url(\'' + profileImageUrl + '\') ' + bgPosition + ' / ' + bgSize + ' no-repeat;"></div>';
+                        topContent += '<div style="' + imgCircleStyleBase + ' background: url(\'' + escapeCssUrl(profileImageUrl) + '\') ' + bgPosition + ' / ' + bgSize + ' no-repeat;"></div>';
                         topContent += '</div>';
                     }
                     topContent += '<div style="' + textContainerStyle + '">';
-                    if (profile.tag) topContent += '<div style="' + tagStyle + '">' + profile.tag + '</div>';
-                    if (profile.name && profile.name.trim()) topContent += '<div style="' + nameStyle + '">' + profile.name + '</div>';
+                    if (profile.tag) topContent += '<div style="' + tagStyle + '">' + escapeText(profile.tag) + '</div>';
+                    if (profile.name && profile.name.trim()) topContent += '<div style="' + nameStyle + '">' + escapeText(profile.name) + '</div>';
                     if (profile.desc && profile.desc.trim()) {
-                        const descText = profile.desc.replace(/\n/g, '<br>');
+                        const descText = escapeText(profile.desc).replace(/\n/g, '<br>');
                         topContent += '<div style="' + descStyle + '">' + descText + '</div>';
                     }
                     topContent += '</div></div>';
@@ -1180,23 +1200,23 @@ function generateHTML(ctx, isPreview) {
                 const sectionMarginBottom = isInSection ? 'margin-bottom:20px;' : '';
                 const sectionBorderRadius = isInSection ? 'border-radius:10px 10px 0 0;' : 'border-radius:10px;';
 
-                sectionHtml += '<div style="width:100%;height:15vh;display:table;background-color:#1a1a1a;background-image:url(\'' + sectionImage + '\');background-size:' + zoom + '% auto;background-position:' + focusX + '% ' + focusY + '%;background-repeat:no-repeat;' + sectionBorderRadius + sectionMarginBottom + '">';
+                sectionHtml += '<div style="width:100%;height:15vh;display:table;background-color:#1a1a1a;background-image:url(\'' + escapeCssUrl(sectionImage) + '\');background-size:' + zoom + '% auto;background-position:' + focusX + '% ' + focusY + '%;background-repeat:no-repeat;' + sectionBorderRadius + sectionMarginBottom + '">';
                 sectionHtml += '<div style="display:table-cell;vertical-align:middle;width:100%;height:15vh;padding:clamp(15px, 3vw, 20px) clamp(30px, 5vw, 40px);box-sizing:border-box;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, transparent 60%);' + sectionBorderRadius + 'text-align:' + textAlign + ';">';
                 if (item.subtitle && item.subtitle.trim()) {
-                    sectionHtml += '<div style="font-size:' + pxToClamp(ctx.headingFontSizes.sectionSubtitle) + ';line-height:1.3;letter-spacing:clamp(1.5px, 0.3vw, 2px);color:rgba(255, 255, 255, 0.7);margin:0 0 clamp(6px, 1.2vw, 8px) 0;font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.8);">' + item.subtitle + '</div>';
+                    sectionHtml += '<div style="font-size:' + pxToClamp(ctx.headingFontSizes.sectionSubtitle) + ';line-height:1.3;letter-spacing:clamp(1.5px, 0.3vw, 2px);color:rgba(255, 255, 255, 0.7);margin:0 0 clamp(6px, 1.2vw, 8px) 0;font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.8);">' + escapeText(item.subtitle) + '</div>';
                 }
                 if (item.title) {
-                    sectionHtml += '<h1 style="font-size:' + pxToClamp(ctx.headingFontSizes.sectionTitle) + ';color:rgba(255, 255, 255, 1.0);margin:0;font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';font-weight:700;line-height:1.2;text-shadow:0 4px 15px rgba(0,0,0,0.6);">' + item.title + '</h1>';
+                    sectionHtml += '<h1 style="font-size:' + pxToClamp(ctx.headingFontSizes.sectionTitle) + ';color:rgba(255, 255, 255, 1.0);margin:0;font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';font-weight:700;line-height:1.2;text-shadow:0 4px 15px rgba(0,0,0,0.6);">' + escapeText(item.title) + '</h1>';
                 }
                 sectionHtml += '</div></div>';
             } else {
                 const textAlign = item.align || 'center';
                 sectionHtml += '<div style="width: 100%; padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 40px); text-align: ' + textAlign + ';">';
                 if (item.subtitle && item.subtitle.trim()) {
-                    sectionHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionSubtitle) + '; color: ' + currentSectionTheme.tagText + '; letter-spacing: clamp(1.5px, 0.3vw, 2px); margin-bottom: clamp(8px, 1.5vw, 10px); text-transform: uppercase;">' + item.subtitle + '</div>';
+                    sectionHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionSubtitle) + '; color: ' + currentSectionTheme.tagText + '; letter-spacing: clamp(1.5px, 0.3vw, 2px); margin-bottom: clamp(8px, 1.5vw, 10px); text-transform: uppercase;">' + escapeText(item.subtitle) + '</div>';
                 }
                 if (item.title) {
-                    sectionHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; font-weight: 700; color: ' + currentSectionTheme.header + '; letter-spacing: clamp(0.5px, 0.2vw, 1px);">' + item.title + '</div>';
+                    sectionHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; font-weight: 700; color: ' + currentSectionTheme.header + '; letter-spacing: clamp(0.5px, 0.2vw, 1px);">' + escapeText(item.title) + '</div>';
                 }
                 sectionHtml += '</div>';
             }

@@ -14,11 +14,16 @@ function updateProfilesList() {
         const focusYValueId = 'profile' + index + 'FocusYValue';
         const zoomId = 'profile' + index + 'Zoom';
         const zoomValueId = 'profile' + index + 'ZoomValue';
+        const profileName = escapeHtml(profile.name || '');
+        const profileTitle = profileName || 'PROFILE #' + (index + 1);
+        const profileImageUrl = escapeHtml(profile.imageUrl || '');
+        const profileDesc = escapeHtml(profile.desc || '');
+        const profileColor = /^#[0-9A-Fa-f]{6}$/.test(profile.color || '') ? profile.color : '#5a9ace';
 
         profileSection.innerHTML =
             '<div class="profile-header">' +
             '<div class="profile-title-group profile-header-toggle" data-index="' + index + '" style="cursor:pointer;">' +
-            '<span class="profile-title" id="profileTitle' + index + '">' + (profile.name ? profile.name : 'PROFILE #' + (index + 1)) + '</span>' +
+            '<span class="profile-title" id="profileTitle' + index + '">' + profileTitle + '</span>' +
             '</div>' +
             '<div class="page-controls">' +
             '<button class="btn-move btn-profile-move-up" data-index="' + index + '" title="위로">▲</button>' +
@@ -29,7 +34,7 @@ function updateProfilesList() {
             '<div class="profile-body">' +
             '<div class="input-group">' +
             '<label>이름 (Name)</label>' +
-            '<input type="text" class="profile-name-input" placeholder="캐릭터 이름" value="' + (profile.name || '') + '" data-index="' + index + '">' +
+            '<input type="text" class="profile-name-input" placeholder="캐릭터 이름" value="' + profileName + '" data-index="' + index + '">' +
             '</div>' +
             '<div class="input-group">' +
             '<label>이미지 URL' +
@@ -38,7 +43,7 @@ function updateProfilesList() {
             '<span class="tooltip-text">//ac.namu.la/~ 형식의 링크 사용을 권장합니다. 아카라이브 글쓰기에서 원하는 이미지를 삽입한 후 \'코드보기\'에서 확인할 수 있는 부분을 붙여넣기 해주세요.</span>' +
             '</span>' +
             '</label>' +
-            '<input type="text" class="profile-image-input" placeholder="https://..." value="' + (profile.imageUrl || '') + '" data-index="' + index + '">' +
+            '<input type="text" class="profile-image-input" placeholder="https://..." value="' + profileImageUrl + '" data-index="' + index + '">' +
             '<button class="btn-ghost full-width btn-profile-local-image" type="button" data-index="' + index + '" style="margin-top: 8px;">로컬 이미지 선택</button>' +
             '</div>' +
             '<div class="input-group">' +
@@ -55,7 +60,7 @@ function updateProfilesList() {
             '</div>' +
             '<div class="input-group">' +
             '<label>소개글 (Description)</label>' +
-            '<textarea class="profile-desc-input" rows="3" placeholder="소개 내용..." data-index="' + index + '">' + (profile.desc || '') + '</textarea>' +
+            '<textarea class="profile-desc-input" rows="3" placeholder="소개 내용..." data-index="' + index + '">' + profileDesc + '</textarea>' +
             '</div>' +
             '<div class="input-group">' +
             '<label>인물 태그</label>' +
@@ -70,8 +75,8 @@ function updateProfilesList() {
             '<div class="input-group">' +
             '<label>캐릭터 색상</label>' +
             '<div class="profile-color-row">' +
-            '<button class="profile-color-chip" type="button" style="background:' + (profile.color || '#5a9ace') + ';" data-index="' + index + '" title="색상 미리보기"></button>' +
-            '<input type="text" class="profile-color-text-input" placeholder="#5a9ace" value="' + (profile.color || '') + '" data-index="' + index + '">' +
+            '<button class="profile-color-chip" type="button" style="background:' + profileColor + ';" data-index="' + index + '" title="색상 미리보기"></button>' +
+            '<input type="text" class="profile-color-text-input" placeholder="#5a9ace" value="' + escapeHtml(profile.color || '') + '" data-index="' + index + '">' +
             '<button class="btn-move btn-profile-eyedropper" type="button" data-index="' + index + '" title="스포이드">⌖</button>' +
             '</div>' +
             '<div class="profile-color-palette">' +

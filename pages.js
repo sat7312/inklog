@@ -8,8 +8,8 @@ function updateTagsList() {
         const tagItem = document.createElement('div');
         tagItem.className = 'tag-edit-item';
         tagItem.innerHTML =
-            '<input type="text" class="tag-value-input" placeholder="태그 텍스트" value="' + (tag.value || '') + '" data-index="' + index + '" data-field="value">' +
-            '<input type="text" class="tag-link-input" placeholder="링크 (선택)" value="' + (tag.link || '') + '" data-index="' + index + '" data-field="link">' +
+            '<input type="text" class="tag-value-input" placeholder="태그 텍스트" value="' + escapeHtml(tag.value || '') + '" data-index="' + index + '" data-field="value">' +
+            '<input type="text" class="tag-link-input" placeholder="링크 (선택)" value="' + escapeHtml(tag.link || '') + '" data-index="' + index + '" data-field="link">' +
             '<button class="btn-delete-item" data-index="' + index + '" title="삭제">×</button>';
         tagsList.appendChild(tagItem);
     });
@@ -44,10 +44,11 @@ function updatePageTagsList() {
     tempPageTags.forEach(function (tag, index) {
         const tagItem = document.createElement('div');
         tagItem.className = 'tag-edit-item';
+        const tagName = escapeHtml(tag.name || 'Tag');
         tagItem.innerHTML =
-            '<div class="tag-label-static" title="' + (tag.name || 'Tag') + '">' + (tag.name || 'Tag') + '</div>' +
-            '<input type="text" class="tag-value-input" placeholder="값 (Value)" value="' + (tag.value || '') + '" data-index="' + index + '" data-field="value">' +
-            '<input type="text" class="tag-link-input" placeholder="링크 (선택)" value="' + (tag.link || '') + '" data-index="' + index + '" data-field="link">' +
+            '<div class="tag-label-static" title="' + tagName + '">' + tagName + '</div>' +
+            '<input type="text" class="tag-value-input" placeholder="값 (Value)" value="' + escapeHtml(tag.value || '') + '" data-index="' + index + '" data-field="value">' +
+            '<input type="text" class="tag-link-input" placeholder="링크 (선택)" value="' + escapeHtml(tag.link || '') + '" data-index="' + index + '" data-field="link">' +
             '<button class="btn-delete-tag" data-index="' + index + '" title="삭제">×</button>';
         list.appendChild(tagItem);
     });
@@ -79,9 +80,9 @@ function updateReplacementsList() {
         const item = document.createElement('div');
         item.className = 'replacement-edit-item';
         item.innerHTML =
-            '<input type="text" class="replacement-from-input" placeholder="원본 단어" value="' + (rep.from || '') + '" data-index="' + index + '" data-field="from">' +
+            '<input type="text" class="replacement-from-input" placeholder="원본 단어" value="' + escapeHtml(rep.from || '') + '" data-index="' + index + '" data-field="from">' +
             '<div class="arrow-static">→</div>' +
-            '<input type="text" class="replacement-to-input" placeholder="바꿀 단어" value="' + (rep.to || '') + '" data-index="' + index + '" data-field="to">' +
+            '<input type="text" class="replacement-to-input" placeholder="바꿀 단어" value="' + escapeHtml(rep.to || '') + '" data-index="' + index + '" data-field="to">' +
             '<button class="btn-delete-item" data-index="' + index + '" title="삭제">×</button>';
         list.appendChild(item);
     });
@@ -315,12 +316,13 @@ function updatePagesList() {
         if (item.itemType === 'section') {
             let sectionDisplay = item.title || 'Section';
             if (item.subtitle) sectionDisplay += ' - ' + item.subtitle;
+            const escapedSectionDisplay = escapeHtml(sectionDisplay);
 
             pageItem.innerHTML =
                 '<div class="page-item-header">' +
                 '<div class="page-item-main">' +
                 '<div class="page-item-info">' +
-                '<span class="page-item-name" style="color: var(--accent-blue); font-weight: 700;">📑 ' + sectionDisplay + '</span>' +
+                '<span class="page-item-name" style="color: var(--accent-blue); font-weight: 700;">📑 ' + escapedSectionDisplay + '</span>' +
                 '<div class="page-item-preview" style="color: var(--text-muted); font-size: 12px;">섹션 (구분선)</div>' +
                 '</div>' +
                 '</div>' +
@@ -362,14 +364,16 @@ function updatePagesList() {
             if (item.subtitle && item.subtitle.trim()) speaker += ' - ' + item.subtitle;
 
             const previewText = item.content.substring(0, 50).replace(/\[.*?\]/g, '').trim() + '...';
+            const escapedSpeaker = escapeHtml(speaker);
+            const escapedPreviewText = escapeHtml(previewText);
 
             pageItem.innerHTML =
                 '<div class="page-item-header">' +
                 '<div class="page-item-main">' +
                 '<span class="page-num">#' + pageNumber + '</span>' +
                 '<div class="page-item-info">' +
-                '<span class="page-item-name">' + speaker + '</span>' +
-                '<div class="page-item-preview">' + previewText + '</div>' +
+                '<span class="page-item-name">' + escapedSpeaker + '</span>' +
+                '<div class="page-item-preview">' + escapedPreviewText + '</div>' +
                 '</div>' +
                 '</div>' +
                 '<div class="page-controls">' +

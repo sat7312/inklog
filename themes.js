@@ -38,9 +38,11 @@ function updateCustomThemesList() {
         const themeItem = document.createElement('div');
         themeItem.className = 'custom-theme-item';
         const headerColor = theme.header || theme.line || theme.headerText || theme.text || '#000000';
+        const previewBg = /^#[0-9A-Fa-f]{6}$/.test(theme.bg || '') ? theme.bg : '#ffffff';
+        const previewBorder = /^#[0-9A-Fa-f]{6}$/.test(headerColor || '') ? headerColor : '#000000';
         themeItem.innerHTML =
-            '<span class="theme-name">' + theme.name + '</span>' +
-            '<span class="theme-preview" style="background-color: ' + theme.bg + '; border: 1px solid ' + headerColor + ';"></span>' +
+            '<span class="theme-name">' + escapeHtml(theme.name || '') + '</span>' +
+            '<span class="theme-preview" style="background-color: ' + previewBg + '; border: 1px solid ' + previewBorder + ';"></span>' +
             '<div class="theme-actions">' +
                 '<button class="btn-load-theme" data-index="' + index + '">불러오기</button>' +
                 '<button class="btn-overwrite-theme" data-index="' + index + '">덮어쓰기</button>' +

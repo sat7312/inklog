@@ -27,12 +27,14 @@ function renderPresetSlots(presets) {
         const slotDiv = document.createElement('div');
         slotDiv.className = 'preset-slot has-data';
         slotDiv.dataset.slotIndex = index;
+        const presetName = escapeHtml(preset.name || `프리셋 ${index + 1}`);
+        const presetDate = escapeHtml(preset.date || '');
 
         slotDiv.innerHTML = `
             <div class="preset-number">${index + 1}</div>
             <div class="preset-info">
-                <div class="preset-name">${preset.name || `프리셋 ${index + 1}`}</div>
-                <div class="preset-date">${preset.date || ''}</div>
+                <div class="preset-name">${presetName}</div>
+                <div class="preset-date">${presetDate}</div>
             </div>
             <div class="preset-actions">
                 <button class="btn-load-preset" onclick="loadPreset(${index})">불러오기</button>
