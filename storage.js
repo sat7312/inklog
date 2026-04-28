@@ -260,16 +260,9 @@ function normalizePages(value, imageStore) {
 }
 
 function normalizeTags(value) {
-    let normalizedTags;
-    if (Array.isArray(value) && value.length > 0) {
-        normalizedTags = JSON.parse(JSON.stringify(value));
-    } else {
-        normalizedTags = JSON.parse(JSON.stringify(DEFAULT_TAGS));
-    }
-    while (normalizedTags.length < DEFAULT_TAGS.length) {
-        normalizedTags.push(JSON.parse(JSON.stringify(DEFAULT_TAGS[normalizedTags.length])));
-    }
-    return normalizedTags;
+    return Array.isArray(value)
+        ? JSON.parse(JSON.stringify(value))
+        : JSON.parse(JSON.stringify(DEFAULT_TAGS));
 }
 
 function normalizeProfiles(data, imageStore) {

@@ -48,7 +48,9 @@ function updatePreview() {
             enableTopSection: false,
             enableComment: false,
             enableQuoteAssignment: true,
-            forceOpenPageIndexes: transientExpandedPageIndexes
+            forceOpenPageIndexes: transientExpandedPageIndexes,
+            renderAnchors: true,
+            renderAnchorPrefix: 'editor-preview'
         });
         preview.innerHTML = generateHTML(ctx, true);
         if (shouldRestoreFoldState) restorePreviewDetailsOpenStates(openStates);

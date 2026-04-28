@@ -244,6 +244,20 @@ function movePageDown(index) {
     }
 }
 
+function jumpToPreviewItem(index) {
+    if (index < 0 || index >= pages.length || !pages[index]) return;
+    transientExpandedPageIndexes = pages[index].itemType === 'section' ? [] : [index];
+    updatePreview();
+
+    requestAnimationFrame(function () {
+        const itemType = pages[index].itemType === 'section' ? 'section' : 'page';
+        const target = document.getElementById('editor-preview-' + itemType + '-' + index);
+        if (!target) return;
+        if (target.tagName === 'DETAILS') target.open = true;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
 function calculateTextStats(text) {
     if (!text || !text.trim()) {
         return { charCountNoSpace: 0, charCountWithSpace: 0, wordCount: 0 };
@@ -424,8 +438,7 @@ function updatePagesList() {
                 '</div>' +
                 '</div>' +
                 '<div class="page-controls">' +
-                '<button class="btn-move btn-move-up" data-index="' + index + '" title="위로">▲</button>' +
-                '<button class="btn-move btn-move-down" data-index="' + index + '" title="아래로">▼</button>' +
+                '<button class="btn-move btn-jump-preview" data-index="' + index + '" title="미리보기로 이동">↗</button>' +
                 '<button class="btn-delete-page" data-index="' + index + '" title="삭제">×</button>' +
                 '</div>' +
                 '</div>';
@@ -476,8 +489,7 @@ function updatePagesList() {
                 '</div>' +
                 '</div>' +
                 '<div class="page-controls">' +
-                '<button class="btn-move btn-move-up" data-index="' + index + '" title="위로">▲</button>' +
-                '<button class="btn-move btn-move-down" data-index="' + index + '" title="아래로">▼</button>' +
+                '<button class="btn-move btn-jump-preview" data-index="' + index + '" title="미리보기로 이동">↗</button>' +
                 '<button class="btn-delete-page" data-index="' + index + '" title="삭제">×</button>' +
                 '</div>' +
                 '</div>';
@@ -509,17 +521,10 @@ function updatePagesList() {
 
     setupPagesDragSort(pagesList);
 
-    document.querySelectorAll('.btn-move-up').forEach(function (btn) {
+    document.querySelectorAll('.btn-jump-preview').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            movePageUp(parseInt(e.target.dataset.index));
-        });
-    });
-
-    document.querySelectorAll('.btn-move-down').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            movePageDown(parseInt(e.target.dataset.index));
+            jumpToPreviewItem(parseInt(e.target.dataset.index));
         });
     });
 
