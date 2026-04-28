@@ -47,32 +47,6 @@ function setupThemeToggle() {
     });
 }
 
-function setupSoundToggle() {
-    const soundToggle = document.getElementById('soundToggle');
-    const rainAudio = document.getElementById('rainAudio');
-    const iconOff = document.getElementById('icon-sound-off');
-    const iconOn = document.getElementById('icon-sound-on');
-    if (!soundToggle || !rainAudio) return;
-    rainAudio.volume = 1.0;
-    soundToggle.addEventListener('click', function () {
-        if (rainAudio.paused) {
-            rainAudio.play().then(function () {
-                if (iconOff) iconOff.style.display = 'none';
-                if (iconOn) iconOn.style.display = 'block';
-                soundToggle.classList.add('playing');
-                showNotification('빗소리가 켜졌습니다.');
-            }).catch(function () {
-                showNotification('오디오 재생 실패');
-            });
-        } else {
-            rainAudio.pause();
-            if (iconOff) iconOff.style.display = 'block';
-            if (iconOn) iconOn.style.display = 'none';
-            soundToggle.classList.remove('playing');
-            showNotification('빗소리가 꺼졌습니다.');
-        }
-    });
-}
 
 function setupCreditModal() {
     const creditModal = document.getElementById('creditModal');

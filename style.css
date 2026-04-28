@@ -1844,39 +1844,7 @@ input[type="color"] {
 
 /* --- style.css 하단에 추가 (소리 버튼 및 크레딧 탭 스타일) --- */
 
-/* 소리 토글 버튼 (헤더 우측 상단 고정) */
-.btn-sound-toggle {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
 
-.btn-sound-toggle svg {
-    width: 18px;
-    height: 18px;
-}
-
-.btn-sound-toggle:hover {
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    background: var(--accent-blue-dim);
-    transform: scale(1.05);
-}
-
-.btn-sound-toggle.playing {
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    box-shadow: 0 0 10px var(--accent-blue-dim);
-    animation: pulseBlue 2s infinite;
-}
 
 @keyframes pulseBlue {
     0% {
@@ -2007,7 +1975,7 @@ input[type="color"] {
     color: var(--text-muted);
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2036,10 +2004,6 @@ body.light-mode .btn-header-action {
     background: rgba(0, 0, 0, 0.03);
 }
 
-/* 라이트 모드에서 소리 버튼 배경 보정 */
-body.light-mode .btn-sound-toggle {
-    background: rgba(0, 0, 0, 0.03);
-}
 
 /* 라이트 모드에서 크레딧 버튼 배경 보정 */
 body.light-mode .btn-credit-toggle {
@@ -2696,7 +2660,6 @@ body.light-mode .btn-save-new-preset {
 
     .btn-theme-toggle,
     .btn-header-action,
-    .btn-sound-toggle,
     .btn-credit-toggle {
         width: 32px;
         height: 32px;
@@ -2704,7 +2667,6 @@ body.light-mode .btn-save-new-preset {
 
     .btn-theme-toggle svg,
     .btn-header-action svg,
-    .btn-sound-toggle svg,
     .btn-credit-toggle svg {
         width: 16px;
         height: 16px;
@@ -2993,7 +2955,6 @@ body.light-mode .btn-save-new-preset {
 
     .btn-theme-toggle,
     .btn-header-action,
-    .btn-sound-toggle,
     .btn-credit-toggle {
         width: 28px;
         height: 28px;
@@ -3004,19 +2965,12 @@ body.light-mode .btn-save-new-preset {
         right: 16px;
     }
 
-    .btn-sound-toggle {
-        right: calc(16px + 28px + 8px);
-        /* 크레딧 버튼 + 간격 */
-    }
-
     .btn-theme-toggle {
-        right: calc(16px + 28px + 8px + 28px + 8px);
-        /* 크레딧 + 사운드 + 간격들 */
+        right: calc(16px + 28px + 8px);
     }
 
     .btn-theme-toggle svg,
     .btn-header-action svg,
-    .btn-sound-toggle svg,
     .btn-credit-toggle svg {
         width: 14px;
         height: 14px;

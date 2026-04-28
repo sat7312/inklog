@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeApp() {
     try {
         setupThemeToggle();
-        setupSoundToggle();
         setupCreditModal();
         setupPanelToggle();
         loadFromStorage();
