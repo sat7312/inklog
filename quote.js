@@ -242,9 +242,7 @@ function openQuoteCharacterMenu(target) {
     const clearButton = document.createElement('button');
     clearButton.type = 'button';
     clearButton.className = 'quote-character-option quote-character-clear';
-    clearButton.innerHTML =
-        '<span class="quote-character-swatch quote-character-clear-icon">×</span>' +
-        '<span>색상 해제</span>';
+    clearButton.textContent = '색상 해제';
     clearButton.addEventListener('click', function () {
         clearQuoteCharacterBatch(selectedQuoteTargets.slice());
         closeQuoteCharacterMenu();
@@ -255,9 +253,7 @@ function openQuoteCharacterMenu(target) {
     const deselectButton = document.createElement('button');
     deselectButton.type = 'button';
     deselectButton.className = 'quote-character-option quote-character-deselect';
-    deselectButton.innerHTML =
-        '<span class="quote-character-swatch quote-character-deselect-icon">□</span>' +
-        '<span>전체 선택 해제</span>';
+    deselectButton.textContent = '전체 선택 해제';
     deselectButton.addEventListener('click', function () {
         removeQuoteCharacterMenuOnly();
         clearSelectedQuoteTargets();
