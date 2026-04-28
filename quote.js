@@ -164,6 +164,34 @@ function closeQuoteCharacterMenu() {
     clearSelectedQuoteTargets();
 }
 
+function getQuoteMenuHost(target) {
+    const preview = document.getElementById('preview');
+    const details = target.closest('details');
+    if (details && (!preview || preview.contains(details))) return details;
+
+    let current = target.parentElement;
+    while (current && current !== preview) {
+        if (current.style && current.style.maxWidth === '900px') return current;
+        current = current.parentElement;
+    }
+    return preview || document.body;
+}
+
+function placeQuoteCharacterMenu(menu, target) {
+    const host = getQuoteMenuHost(target);
+    const preview = document.getElementById('preview');
+    host.appendChild(menu);
+
+    const hostRect = host.getBoundingClientRect();
+    const previewRect = preview ? preview.getBoundingClientRect() : document.documentElement.getBoundingClientRect();
+    const sideSpace = previewRect.right - hostRect.right;
+    if (sideSpace >= 188) {
+        menu.classList.add('quote-character-menu-side');
+    } else {
+        menu.classList.add('quote-character-menu-inline');
+    }
+}
+
 function openQuoteCharacterMenu(target) {
     const existing = document.getElementById('quoteCharacterMenu');
     if (existing) existing.remove();
@@ -212,8 +240,5 @@ function openQuoteCharacterMenu(target) {
     });
     menu.appendChild(clearButton);
 
-    document.body.appendChild(menu);
-    const rect = target.getBoundingClientRect();
-    menu.style.left = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - menu.offsetWidth - 12) + 'px';
-    menu.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    placeQuoteCharacterMenu(menu, target);
 }

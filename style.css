@@ -1115,14 +1115,29 @@ button {
 }
 
 .quote-character-menu {
-    position: absolute;
     z-index: 2000;
-    min-width: 160px;
+    width: 176px;
     padding: 6px;
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.quote-character-menu-side {
+    position: sticky;
+    top: 12px;
+    float: right;
+    clear: right;
+    margin: 0 -188px 12px 12px;
+}
+
+.quote-character-menu-inline {
+    position: sticky;
+    top: 12px;
+    float: right;
+    clear: right;
+    margin: 0 0 12px 12px;
 }
 
 .quote-character-status {
