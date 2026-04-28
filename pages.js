@@ -86,7 +86,7 @@ function updateReplacementsList() {
         list.appendChild(item);
     });
 
-    document.querySelectorAll('.replacement-from-input, .replacement-to-input').forEach(function (input) {
+    list.querySelectorAll('.replacement-from-input, .replacement-to-input').forEach(function (input) {
         input.addEventListener('input', function (e) {
             const idx = parseInt(e.target.dataset.index);
             const field = e.target.dataset.field;
@@ -96,7 +96,7 @@ function updateReplacementsList() {
         });
     });
 
-    document.querySelectorAll('.btn-delete-item').forEach(function (btn) {
+    list.querySelectorAll('.btn-delete-item').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             const idx = parseInt(e.target.dataset.index);
             replacements.splice(idx, 1);
