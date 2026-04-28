@@ -1063,13 +1063,13 @@ button {
 }
 
 .btn-library-view-toggle svg {
-    width: 17px;
-    height: 17px;
+    width: 14px;
+    height: 14px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 1.8;
+    stroke-width: 2;
 }
 
 .btn-library-view-toggle.active {

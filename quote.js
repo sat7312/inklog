@@ -100,7 +100,6 @@ function getQuoteAssignmentSummary(targets) {
 function replaceQuoteWithCharacter(content, lineIndex, quoteSource, profileIndex) {
     if (!quoteSource) return content;
     const replacement = '[CHAR:' + profileIndex + ']' + quoteSource + '[/CHAR]';
-    if (content.includes(replacement)) return content;
     const charWrapped = new RegExp('\\[CHAR:\\d+\\]' + escapeRegExp(quoteSource) + '\\[\\/CHAR\\]');
     const lines = content.split('\n');
     if (lineIndex >= 0 && lineIndex < lines.length) {
