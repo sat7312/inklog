@@ -295,6 +295,7 @@ function setupEventListeners() {
     const addPageBtn = document.getElementById('addPage');
     if (addPageBtn) {
         addPageBtn.addEventListener('click', function () {
+            closeQuoteCharacterMenu();
             currentEditingIndex = null;
             document.getElementById('pageTitle').value = '';
             document.getElementById('pageSubtitle').value = '';
@@ -315,6 +316,7 @@ function setupEventListeners() {
     const addSectionBtn = document.getElementById('addSection');
     if (addSectionBtn) {
         addSectionBtn.addEventListener('click', function () {
+            closeQuoteCharacterMenu();
             currentEditingIndex = null;
             document.getElementById('sectionTitle').value = '';
             document.getElementById('sectionSubtitle').value = '';

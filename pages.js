@@ -434,6 +434,7 @@ function updatePagesList() {
                 if (pageItem.dataset.suppressClick === 'true') return;
                 if (e.target.closest('.btn-move') || e.target.closest('.btn-delete-page')) return;
 
+                closeQuoteCharacterMenu();
                 currentEditingIndex = index;
                 document.getElementById('sectionTitle').value = item.title || '';
                 document.getElementById('sectionSubtitle').value = item.subtitle || '';
@@ -485,6 +486,7 @@ function updatePagesList() {
                 if (pageItem.dataset.suppressClick === 'true') return;
                 if (e.target.closest('.btn-move') || e.target.closest('.btn-delete-page')) return;
 
+                closeQuoteCharacterMenu();
                 currentEditingIndex = index;
                 document.getElementById('pageTitle').value = item.title || '';
                 document.getElementById('pageSubtitle').value = item.subtitle || '';
