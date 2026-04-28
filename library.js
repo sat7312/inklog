@@ -3,6 +3,7 @@
 
 let chapters = [];
 let selectedChapterId = null;
+let readerScrollRaf = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     setupThemeToggle();
@@ -164,6 +165,7 @@ function selectChapter(id) {
         selectedChapterId = null;
         renderDescription(null);
         renderChapterList();
+        updateActiveOutlineItem(null);
         return;
     }
 
@@ -204,7 +206,7 @@ function createChapterOutline(chapter) {
     pageItems.forEach(function (item, index) {
         if (item.itemType === 'section') {
             pageNumber = 0;
-            html += '<button type="button" class="library-outline-row library-outline-section" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('section', index)) + '">' +
+            html += '<button type="button" class="library-outline-row library-outline-section" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('section', index)) + '" aria-current="false">' +
                 '<span class="library-outline-marker">SECTION</span>' +
                 '<span class="library-outline-title">' + escapeHtml(getOutlineLabel(item, 'Section')) + '</span>' +
                 '</button>';
@@ -212,7 +214,7 @@ function createChapterOutline(chapter) {
         }
 
         pageNumber++;
-        html += '<button type="button" class="library-outline-row library-outline-page" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('page', index)) + '">' +
+        html += '<button type="button" class="library-outline-row library-outline-page" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('page', index)) + '" aria-current="false">' +
             '<span class="library-outline-marker">#' + pageNumber + '</span>' +
             '<span class="library-outline-title">' + escapeHtml(getOutlineLabel(item, 'Page ' + pageNumber)) + '</span>' +
             '</button>';
@@ -224,6 +226,7 @@ function createChapterOutline(chapter) {
         if (!row) return;
         event.stopPropagation();
         renderReader(chapter);
+        updateActiveOutlineItem(row.dataset.anchor);
         scrollLibraryReaderTo(row.dataset.anchor);
     });
 
@@ -236,8 +239,102 @@ function scrollLibraryReaderTo(anchorId) {
         const target = document.getElementById(anchorId);
         if (!target) return;
         if (target.tagName === 'DETAILS') target.open = true;
+        closeOtherReaderDetails(target);
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        updateActiveOutlineItem(anchorId);
     });
+}
+
+function updateActiveOutlineItem(anchorId) {
+    const outlineRows = document.querySelectorAll('.library-outline-row');
+    outlineRows.forEach(function (row) {
+        const isActive = !!anchorId && row.dataset.anchor === anchorId;
+        row.classList.toggle('active', isActive);
+        row.setAttribute('aria-current', isActive ? 'true' : 'false');
+    });
+}
+
+function getReaderScrollContainer() {
+    return document.getElementById('readerContent');
+}
+
+function getCurrentReaderAnchorId() {
+    const content = getReaderScrollContainer();
+    if (!content) return null;
+
+    const anchors = Array.from(content.querySelectorAll('[data-library-anchor="true"]'));
+    if (anchors.length === 0) return null;
+
+    const contentRect = content.getBoundingClientRect();
+    const readingLine = contentRect.top + Math.min(contentRect.height * 0.35, 220);
+    let currentAnchor = anchors[0];
+    let currentDistance = Math.abs(anchors[0].getBoundingClientRect().top - readingLine);
+
+    anchors.forEach(function (anchor) {
+        const rect = anchor.getBoundingClientRect();
+        const distance = Math.abs(rect.top - readingLine);
+        if (rect.top <= readingLine && distance <= currentDistance + contentRect.height) {
+            currentAnchor = anchor;
+            currentDistance = distance;
+        }
+    });
+
+    return currentAnchor ? currentAnchor.id : null;
+}
+
+function syncActiveOutlineWithReader() {
+    updateActiveOutlineItem(getCurrentReaderAnchorId());
+}
+
+function scheduleReaderSync() {
+    if (readerScrollRaf) return;
+    readerScrollRaf = requestAnimationFrame(function () {
+        readerScrollRaf = null;
+        syncActiveOutlineWithReader();
+    });
+}
+
+function closeOtherReaderDetails(openDetails) {
+    if (!openDetails || !openDetails.open) return;
+    const content = getReaderScrollContainer();
+    if (!content) return;
+
+    content.querySelectorAll('details[data-library-anchor="true"]').forEach(function (details) {
+        if (details !== openDetails) details.open = false;
+    });
+}
+
+function enforceSingleOpenReaderDetails() {
+    const content = getReaderScrollContainer();
+    if (!content) return;
+
+    let firstOpenDetails = null;
+    content.querySelectorAll('details[data-library-anchor="true"]').forEach(function (details) {
+        if (!details.open) return;
+        if (!firstOpenDetails) {
+            firstOpenDetails = details;
+            return;
+        }
+        details.open = false;
+    });
+}
+
+function setupReaderInteractions() {
+    const content = getReaderScrollContainer();
+    if (!content) return;
+
+    content.addEventListener('scroll', scheduleReaderSync);
+    enforceSingleOpenReaderDetails();
+    content.querySelectorAll('details[data-library-anchor="true"]').forEach(function (details) {
+        details.addEventListener('toggle', function () {
+            if (details.open) {
+                closeOtherReaderDetails(details);
+                updateActiveOutlineItem(details.id);
+            }
+        });
+    });
+
+    syncActiveOutlineWithReader();
 }
 
 function renderDescription(chapter) {
@@ -250,6 +347,7 @@ function renderDescription(chapter) {
         title.textContent = 'Description';
         content.innerHTML = '<div class="library-empty-reader">저장된 작품을 선택하면 소개 페이지가 표시됩니다.</div>';
         if (readButton) readButton.style.display = 'none';
+        updateActiveOutlineItem(null);
         return;
     }
 
@@ -266,6 +364,7 @@ function renderDescription(chapter) {
     } else {
         content.innerHTML = '<div class="library-empty-reader">이 작품은 Intro Preview가 저장되기 전에 생성되었습니다. 작품 편집 후 다시 저장하세요.</div>';
     }
+    updateActiveOutlineItem(null);
 }
 
 function renderReader(chapter) {
@@ -293,6 +392,7 @@ function renderReader(chapter) {
     content.innerHTML = readerData
         ? generateHTML(readerData, true)
         : (chapter.html || '<div class="library-empty-reader">읽을 본문이 없습니다.</div>');
+    setupReaderInteractions();
 }
 
 function deleteChapter(id) {

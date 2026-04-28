@@ -1745,6 +1745,16 @@ input[type="color"] {
     color: var(--text-main);
 }
 
+.library-outline-row.active {
+    background: var(--accent-blue-dim);
+    color: var(--accent-blue);
+    box-shadow: inset 2px 0 0 var(--accent-blue);
+}
+
+.library-outline-row.active .library-outline-marker {
+    color: var(--accent-blue);
+}
+
 .library-outline-section {
     margin-top: 6px;
     color: var(--accent-blue);
