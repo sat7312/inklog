@@ -2173,9 +2173,8 @@ function updateProfilesList() {
         // [수정됨] 페이지 목록(page-controls) 스타일을 그대로 차용
         profileSection.innerHTML =
             '<div class="profile-header">' +
-            '<div class="profile-title-group">' +
-            '<span class="profile-title">PROFILE #' + (index + 1) + '</span>' +
-            '<button class="btn-move btn-profile-toggle" data-index="' + index + '" title="접기/펼치기"><span class="toggle-icon">▾</span></button>' +
+            '<div class="profile-title-group profile-header-toggle" data-index="' + index + '" style="cursor:pointer;">' +
+            '<span class="profile-title" id="profileTitle' + index + '">' + (profile.name ? profile.name : 'PROFILE #' + (index + 1)) + '</span>' +
             '</div>' +
             '<div class="page-controls">' +
             '<button class="btn-move btn-profile-move-up" data-index="' + index + '" title="위로">▲</button>' +
@@ -2250,8 +2249,8 @@ function updateProfilesList() {
 
 // 편의를 위해 이벤트 연결 로직 분리 (updateProfilesList 안에서 호출)
 function attachProfileEvents(profilesList) {
-    profilesList.querySelectorAll('.btn-profile-toggle').forEach(btn => {
-        btn.addEventListener('click', function () {
+    profilesList.querySelectorAll('.profile-header-toggle').forEach(el => {
+        el.addEventListener('click', function () {
             const section = this.closest('.profile-section');
             section.classList.toggle('collapsed');
         });
@@ -2259,7 +2258,10 @@ function attachProfileEvents(profilesList) {
 
     profilesList.querySelectorAll('.profile-name-input').forEach(input => {
         input.addEventListener('input', e => {
-            profiles[parseInt(e.target.dataset.index)].name = e.target.value;
+            const idx = parseInt(e.target.dataset.index);
+            profiles[idx].name = e.target.value;
+            const titleEl = document.getElementById('profileTitle' + idx);
+            if (titleEl) titleEl.textContent = e.target.value || 'PROFILE #' + (idx + 1);
             updatePreview(); saveToStorage();
         });
     });
