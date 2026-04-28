@@ -132,6 +132,10 @@ function renderChapterList() {
             '</div>';
 
         chapterList.appendChild(item);
+
+        if (chapter.id === selectedChapterId) {
+            chapterList.appendChild(createChapterOutline(chapter));
+        }
     });
 
     chapterList.querySelectorAll('.btn-delete-chapter').forEach(function (button) {
@@ -156,12 +160,84 @@ function renderChapterList() {
 }
 
 function selectChapter(id) {
+    if (selectedChapterId === id) {
+        selectedChapterId = null;
+        renderDescription(null);
+        renderChapterList();
+        return;
+    }
+
     selectedChapterId = id;
     const chapter = chapters.find(function (item) {
         return item.id === id;
     });
     renderDescription(chapter);
     renderChapterList();
+}
+
+function getLibraryReaderAnchorId(itemType, index) {
+    return 'library-reader-' + itemType + '-' + index;
+}
+
+function getOutlineLabel(item, fallback) {
+    const title = item && item.title ? item.title.trim() : '';
+    const subtitle = item && item.subtitle ? item.subtitle.trim() : '';
+    if (title && subtitle) return title + ' - ' + subtitle;
+    return title || subtitle || fallback;
+}
+
+function createChapterOutline(chapter) {
+    const outline = document.createElement('div');
+    outline.className = 'library-chapter-outline';
+
+    const pageItems = chapter && chapter.data && Array.isArray(chapter.data.pages)
+        ? chapter.data.pages
+        : [];
+
+    if (pageItems.length === 0) {
+        outline.innerHTML = '<div class="library-outline-empty">저장된 페이지가 없습니다.</div>';
+        return outline;
+    }
+
+    let html = '';
+    let pageNumber = 0;
+    pageItems.forEach(function (item, index) {
+        if (item.itemType === 'section') {
+            pageNumber = 0;
+            html += '<button type="button" class="library-outline-row library-outline-section" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('section', index)) + '">' +
+                '<span class="library-outline-marker">SECTION</span>' +
+                '<span class="library-outline-title">' + escapeHtml(getOutlineLabel(item, 'Section')) + '</span>' +
+                '</button>';
+            return;
+        }
+
+        pageNumber++;
+        html += '<button type="button" class="library-outline-row library-outline-page" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('page', index)) + '">' +
+            '<span class="library-outline-marker">#' + pageNumber + '</span>' +
+            '<span class="library-outline-title">' + escapeHtml(getOutlineLabel(item, 'Page ' + pageNumber)) + '</span>' +
+            '</button>';
+    });
+
+    outline.innerHTML = html;
+    outline.addEventListener('click', function (event) {
+        const row = event.target.closest('.library-outline-row');
+        if (!row) return;
+        event.stopPropagation();
+        renderReader(chapter);
+        scrollLibraryReaderTo(row.dataset.anchor);
+    });
+
+    return outline;
+}
+
+function scrollLibraryReaderTo(anchorId) {
+    if (!anchorId) return;
+    requestAnimationFrame(function () {
+        const target = document.getElementById(anchorId);
+        if (!target) return;
+        if (target.tagName === 'DETAILS') target.open = true;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 }
 
 function renderDescription(chapter) {
@@ -206,7 +282,12 @@ function renderReader(chapter) {
     }
 
     const readerData = chapter.data
-        ? Object.assign({}, chapter.data, { enableTopSection: false, enableComment: false })
+        ? Object.assign({}, chapter.data, {
+            enableTopSection: false,
+            enableComment: false,
+            renderAnchors: true,
+            renderAnchorPrefix: 'library-reader'
+        })
         : null;
 
     content.innerHTML = readerData

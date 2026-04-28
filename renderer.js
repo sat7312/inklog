@@ -222,6 +222,17 @@ function escapeText(value) {
     return escapeAttr(value);
 }
 
+function getRenderAnchorAttr(ctx, itemType, index) {
+    if (!ctx || !ctx.renderAnchors) return '';
+    const prefix = ctx.renderAnchorPrefix || 'reader-item';
+    return ' id="' + escapeAttr(prefix + '-' + itemType + '-' + index) + '" data-library-anchor="true"';
+}
+
+function getRenderAnchorMarker(ctx, itemType, index) {
+    const anchorAttr = getRenderAnchorAttr(ctx, itemType, index);
+    return anchorAttr ? '<div' + anchorAttr + ' style="height:0;overflow:hidden;"></div>' : '';
+}
+
 function escapeCssUrl(value) {
     return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, '');
 }
@@ -908,6 +919,7 @@ function createSoundtrackSection(youtubeUrl, songTitle, artistName, themeStyle, 
 
 function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHtml, hasTopImage, noBottomPadding, ctx) {
     const theme = getTheme(ctx.globalTheme, ctx);
+    const containerAttr = ctx && ctx.containerAttr ? ctx.containerAttr : '';
     const topPadding = hasTopImage ? '0' : 'clamp(20px, 4vw, 30px)';
     const bottomPadding = noBottomPadding ? '0' : 'clamp(20px, 4vw, 30px)';
     const overflowStyle = noBottomPadding ? 'overflow:hidden;' : '';
@@ -924,7 +936,7 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
             if (tagsHtml) content += tagsHtml;
             const summaryStyle = 'cursor: pointer; list-style: none; outline: none; color: inherit; font-weight: normal;';
             const openAttr = ctx && ctx.forceOpenContainer ? ' open' : '';
-            let detailsHtml = '<details' + openAttr + ' style="' + containerStyle + '">';
+            let detailsHtml = '<details' + containerAttr + openAttr + ' style="' + containerStyle + '">';
             detailsHtml += '<summary style="' + summaryStyle + '">' + headerInBg + '</summary>';
             detailsHtml += content + '</details>';
             return detailsHtml;
@@ -948,7 +960,7 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
         const arrowWrapperMid = '</div><div style="display: table-cell; vertical-align: middle; width: clamp(50px, 10vw, 70px); text-align: right; padding-right: clamp(30px, 5vw, 50px);"><span style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; color: ' + theme.tagText + ';">⌵</span></div></div></div>';
         const summaryContent = arrowWrapperStart + collapsedHeaderHtml + arrowWrapperMid;
         const openAttr = ctx && ctx.forceOpenContainer ? ' open' : '';
-        let detailsHtml = '<details' + openAttr + ' style="' + containerStyle + '">';
+        let detailsHtml = '<details' + containerAttr + openAttr + ' style="' + containerStyle + '">';
         detailsHtml += '<summary style="' + summaryStyle + '">' + summaryContent + '</summary>';
         detailsHtml += content + '</details>';
         return detailsHtml;
@@ -958,10 +970,10 @@ function createContainer(content, type, bgImage, isCollapsed, headerHtml, tagsHt
         const arrowWrapperStart = '<div style="width: 100%; display: table;"><div style="display: table-row;"><div style="display: table-cell; vertical-align: middle;">';
         const arrowWrapperMid = '</div><div style="display: table-cell; vertical-align: middle; width: clamp(50px, 10vw, 70px); text-align: right; padding-right: clamp(30px, 5vw, 50px);"><span style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; color: ' + theme.tagText + ';">⌵</span></div></div></div>';
         const headerWithArrow = arrowWrapperStart + headerHtml + arrowWrapperMid;
-        return '<div style="' + containerStyle + '">' + headerWithArrow + content + '</div>';
+        return '<div' + containerAttr + ' style="' + containerStyle + '">' + headerWithArrow + content + '</div>';
     }
 
-    return '<div style="' + containerStyle + '">' + content + '</div>';
+    return '<div' + containerAttr + ' style="' + containerStyle + '">' + content + '</div>';
 }
 
 function generateHTML(ctx, isPreview) {
@@ -1191,6 +1203,7 @@ function generateHTML(ctx, isPreview) {
             }
 
             let sectionHtml = '';
+            const sectionAnchorAttr = getRenderAnchorAttr(ctx, 'section', index);
             if (item.image && item.image.trim()) {
                 const zoom = item.zoom || 100;
                 const focusX = item.focusX || 50;
@@ -1200,7 +1213,7 @@ function generateHTML(ctx, isPreview) {
                 const sectionMarginBottom = isInSection ? 'margin-bottom:20px;' : '';
                 const sectionBorderRadius = isInSection ? 'border-radius:10px 10px 0 0;' : 'border-radius:10px;';
 
-                sectionHtml += '<div style="width:100%;height:15vh;display:table;background-color:#1a1a1a;background-image:url(\'' + escapeCssUrl(sectionImage) + '\');background-size:' + zoom + '% auto;background-position:' + focusX + '% ' + focusY + '%;background-repeat:no-repeat;' + sectionBorderRadius + sectionMarginBottom + '">';
+                sectionHtml += '<div' + sectionAnchorAttr + ' style="width:100%;height:15vh;display:table;background-color:#1a1a1a;background-image:url(\'' + escapeCssUrl(sectionImage) + '\');background-size:' + zoom + '% auto;background-position:' + focusX + '% ' + focusY + '%;background-repeat:no-repeat;' + sectionBorderRadius + sectionMarginBottom + '">';
                 sectionHtml += '<div style="display:table-cell;vertical-align:middle;width:100%;height:15vh;padding:clamp(15px, 3vw, 20px) clamp(30px, 5vw, 40px);box-sizing:border-box;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, transparent 60%);' + sectionBorderRadius + 'text-align:' + textAlign + ';">';
                 if (item.subtitle && item.subtitle.trim()) {
                     sectionHtml += '<div style="font-size:' + pxToClamp(ctx.headingFontSizes.sectionSubtitle) + ';line-height:1.3;letter-spacing:clamp(1.5px, 0.3vw, 2px);color:rgba(255, 255, 255, 0.7);margin:0 0 clamp(6px, 1.2vw, 8px) 0;font-family:\'' + ctx.fontFamily + '\', ' + getFontFallback(ctx.fontFamily) + ';text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.8);">' + escapeText(item.subtitle) + '</div>';
@@ -1211,7 +1224,7 @@ function generateHTML(ctx, isPreview) {
                 sectionHtml += '</div></div>';
             } else {
                 const textAlign = item.align || 'center';
-                sectionHtml += '<div style="width: 100%; padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 40px); text-align: ' + textAlign + ';">';
+                sectionHtml += '<div' + sectionAnchorAttr + ' style="width: 100%; padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 40px); text-align: ' + textAlign + ';">';
                 if (item.subtitle && item.subtitle.trim()) {
                     sectionHtml += '<div style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionSubtitle) + '; color: ' + currentSectionTheme.tagText + '; letter-spacing: clamp(1.5px, 0.3vw, 2px); margin-bottom: clamp(8px, 1.5vw, 10px); text-transform: uppercase;">' + escapeText(item.subtitle) + '</div>';
                 }
@@ -1244,6 +1257,8 @@ function generateHTML(ctx, isPreview) {
             const header = createHeader(headerText, theme, currentPage.headerImage, currentPage.headerFocusX, currentPage.headerFocusY, ctx);
             const pageImageWidth = (currentPage.imageWidth !== undefined && currentPage.imageWidth !== null) ? currentPage.imageWidth : 100;
             const pageCtx = Object.assign({}, ctx, { quotePageIndex: index });
+            const pageAnchorAttr = getRenderAnchorAttr(ctx, 'page', index);
+            const anchoredPageCtx = Object.assign({}, pageCtx, { containerAttr: pageAnchorAttr });
             const forceOpenPage = !!currentPage.collapsed || (ctx.forceOpenPageIndexes && ctx.forceOpenPageIndexes.indexOf(index) !== -1);
 
             if (!ctx.enablePageFold) {
@@ -1251,25 +1266,26 @@ function generateHTML(ctx, isPreview) {
                 pageContentHtml += '<div style="padding: clamp(20px, 4vw, 30px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, pageCtx) + '</div>';
 
                 if (currentPage.bgImage) {
-                    const pageHtml = createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, null, null, false, false, ctx);
+                    const pageHtml = createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, null, null, false, false, anchoredPageCtx);
                     if (isInSection) sectionContainerHtml += pageHtml;
                     else html += pageHtml;
                 } else {
                     if (isInSection) {
+                        sectionContainerHtml += getRenderAnchorMarker(ctx, 'page', index);
                         sectionContainerHtml += pageContentHtml;
                         if (index + 1 < ctx.pages.length && ctx.pages[index + 1].itemType !== 'section') {
                             const hrColor = theme.divider || theme.tagText || 'rgba(0,0,0,0.1)';
                             sectionContainerHtml += '<div style="height: 1px; background-color: ' + hrColor + '; margin: clamp(10px, 2vw, 15px) clamp(30px, 5vw, 50px);"></div>';
                         }
                     } else {
-                        html += createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, null, null, false, false, ctx);
+                        html += createContainer(pageContentHtml, currentPage.type, currentPage.bgImage, false, null, null, false, false, anchoredPageCtx);
                     }
                 }
             } else {
                 let collapsedContent = '<div style="padding: clamp(15px, 3vw, 20px) clamp(30px, 5vw, 50px);">' + parseText(currentPage.content, theme, false, false, pageImageWidth, pageCtx) + '</div>';
 
                 if (currentPage.bgImage) {
-                    const pageHtml = createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, Object.assign({}, ctx, { forceOpenContainer: forceOpenPage }));
+                    const pageHtml = createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, Object.assign({}, ctx, { forceOpenContainer: forceOpenPage, containerAttr: pageAnchorAttr }));
                     if (isInSection) sectionContainerHtml += pageHtml;
                     else html += pageHtml;
                 } else {
@@ -1278,7 +1294,7 @@ function generateHTML(ctx, isPreview) {
                         const collapsedHeaderHtml = header.replace('margin-bottom: 20px; padding-top: 20px;', 'margin: 0;').replace('vertical-align: center;', 'vertical-align: middle;');
                         const arrowWrapperStart = '<div style="width: 100%; display: table;"><div style="display: table-row;"><div style="display: table-cell; vertical-align: middle;">';
                         const arrowWrapperMid = '</div><div style="display: table-cell; vertical-align: middle; width: clamp(50px, 10vw, 70px); text-align: right; padding-right: clamp(30px, 5vw, 50px);"><span style="font-size: ' + pxToClamp(ctx.headingFontSizes.sectionTitle) + '; color: ' + theme.tagText + ';">⌵</span></div></div></div>';
-                        sectionContainerHtml += '<details' + (forceOpenPage ? ' open' : '') + ' style="margin: 0;">';
+                        sectionContainerHtml += '<details' + pageAnchorAttr + (forceOpenPage ? ' open' : '') + ' style="margin: 0;">';
                         sectionContainerHtml += '<summary style="' + summaryStyle + '">' + arrowWrapperStart + collapsedHeaderHtml + arrowWrapperMid + '</summary>';
                         sectionContainerHtml += collapsedContent;
                         sectionContainerHtml += '</details>';
@@ -1287,7 +1303,7 @@ function generateHTML(ctx, isPreview) {
                             sectionContainerHtml += '<div style="height: 1px; background-color: ' + hrColor + '; margin: clamp(10px, 2vw, 15px) clamp(30px, 5vw, 50px);"></div>';
                         }
                     } else {
-                        html += createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, Object.assign({}, ctx, { forceOpenContainer: forceOpenPage }));
+                        html += createContainer(collapsedContent, currentPage.type, currentPage.bgImage, true, header, null, false, false, Object.assign({}, ctx, { forceOpenContainer: forceOpenPage, containerAttr: pageAnchorAttr }));
                     }
                 }
             }
