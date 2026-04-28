@@ -525,6 +525,7 @@ function showDirtyIndicator() {
 function saveToStorage() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(collectEditorData()));
+        updateImageStorageSummary();
         if (!_suppressDirtyIndicator) showDirtyIndicator();
     } catch (e) {
         console.error('Failed to save to storage:', e);
@@ -712,8 +713,128 @@ function resetCurrentData() {
     if (commentContent) commentContent.style.display = 'none';
 
     localStorage.removeItem(STORAGE_KEY);
+    updateImageStorageSummary();
     updatePreview();
     showNotification('초기화 완료! 프리셋과 테마는 유지됩니다.');
+}
+
+function getLocalImageId(value) {
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    if (!trimmed.startsWith('local:')) return '';
+    return trimmed.slice('local:'.length);
+}
+
+function addLocalImageRef(value, usedIds) {
+    const id = getLocalImageId(value);
+    if (id) usedIds.add(id);
+}
+
+function addLocalImageRefsFromText(text, usedIds) {
+    if (typeof text !== 'string' || !text.includes('[IMG:local:')) return;
+    text.replace(/\[IMG:local:([^\]]+)\]/g, function (match, id) {
+        if (id) usedIds.add(id);
+        return match;
+    });
+}
+
+function collectUsedLocalImageIds() {
+    const usedIds = new Set();
+
+    addLocalImageRef(getInputValue('coverImage'), usedIds);
+
+    profiles.forEach(function (profile) {
+        addLocalImageRef(profile.imageUrl, usedIds);
+    });
+
+    pages.forEach(function (item) {
+        addLocalImageRef(item.image, usedIds);
+        addLocalImageRef(item.bgImage, usedIds);
+        addLocalImageRef(item.headerImage, usedIds);
+        addLocalImageRefsFromText(item.content, usedIds);
+    });
+
+    return usedIds;
+}
+
+function getLocalImageDataSize(image) {
+    if (!image || typeof image.dataUrl !== 'string') return 0;
+    return image.dataUrl.length * 2;
+}
+
+function formatBytes(bytes) {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB'];
+    let value = bytes;
+    let unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value = value / 1024;
+        unitIndex += 1;
+    }
+    return value.toFixed(unitIndex === 0 ? 0 : 1) + ' ' + units[unitIndex];
+}
+
+function getImageStorageStats() {
+    const usedIds = collectUsedLocalImageIds();
+    const storedIds = Object.keys(localImages || {});
+    const unusedIds = storedIds.filter(function (id) {
+        return !usedIds.has(id);
+    });
+    const missingIds = Array.from(usedIds).filter(function (id) {
+        return !localImages || !localImages[id];
+    });
+    const totalBytes = storedIds.reduce(function (sum, id) {
+        return sum + getLocalImageDataSize(localImages[id]);
+    }, 0);
+    const unusedBytes = unusedIds.reduce(function (sum, id) {
+        return sum + getLocalImageDataSize(localImages[id]);
+    }, 0);
+
+    return {
+        total: storedIds.length,
+        used: usedIds.size - missingIds.length,
+        unused: unusedIds.length,
+        missing: missingIds.length,
+        totalBytes: totalBytes,
+        unusedBytes: unusedBytes
+    };
+}
+
+function updateImageStorageSummary() {
+    const summary = document.getElementById('imageStorageSummary');
+    if (!summary) return;
+
+    const stats = getImageStorageStats();
+    let text = '저장된 이미지 ' + stats.total + '개 / 사용 중 ' + stats.used + '개 / 미사용 ' + stats.unused + '개';
+    text += ' · 약 ' + formatBytes(stats.totalBytes);
+    if (stats.missing > 0) {
+        text += ' · 누락 참조 ' + stats.missing + '개';
+    }
+    summary.textContent = text;
+}
+
+function cleanupUnusedLocalImages() {
+    const stats = getImageStorageStats();
+    if (stats.unused === 0) {
+        showNotification('정리할 미사용 이미지가 없습니다.');
+        updateImageStorageSummary();
+        return;
+    }
+
+    const message = '미사용 이미지 ' + stats.unused + '개를 삭제하시겠습니까?\n' +
+        '예상 정리 용량: 약 ' + formatBytes(stats.unusedBytes) + '\n\n' +
+        '현재 문서에서 참조하지 않는 이미지만 삭제됩니다.';
+    if (!confirm(message)) return;
+
+    const usedIds = collectUsedLocalImageIds();
+    Object.keys(localImages || {}).forEach(function (id) {
+        if (!usedIds.has(id)) delete localImages[id];
+    });
+
+    saveToStorage();
+    updatePreview();
+    updateImageStorageSummary();
+    showNotification('미사용 이미지 ' + stats.unused + '개를 정리했습니다.');
 }
 
 function exportDataToJSON() {

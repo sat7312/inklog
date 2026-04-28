@@ -774,6 +774,10 @@ function setupEventListeners() {
     const resetDataBtn = document.getElementById('resetData');
     if (resetDataBtn) resetDataBtn.addEventListener('click', resetCurrentData);
 
+    const cleanupImagesBtn = document.getElementById('cleanupImages');
+    if (cleanupImagesBtn) cleanupImagesBtn.addEventListener('click', cleanupUnusedLocalImages);
+    updateImageStorageSummary();
+
     const saveChapterBtn = document.getElementById('saveChapterToLibrary');
     if (saveChapterBtn) saveChapterBtn.addEventListener('click', saveChapterToLibrary);
 
