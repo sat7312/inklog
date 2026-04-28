@@ -180,12 +180,19 @@ function getQuoteMenuHost(target) {
 function placeQuoteCharacterMenu(menu, target) {
     const host = getQuoteMenuHost(target);
     const preview = document.getElementById('preview');
-    host.appendChild(menu);
+    const summary = host.tagName === 'DETAILS' ? host.querySelector('summary') : null;
+    if (summary && summary.nextSibling) {
+        host.insertBefore(menu, summary.nextSibling);
+    } else if (summary) {
+        host.appendChild(menu);
+    } else {
+        host.insertBefore(menu, host.firstChild);
+    }
 
     const hostRect = host.getBoundingClientRect();
     const previewRect = preview ? preview.getBoundingClientRect() : document.documentElement.getBoundingClientRect();
     const sideSpace = previewRect.right - hostRect.right;
-    if (sideSpace >= 188) {
+    if (sideSpace >= 220) {
         menu.classList.add('quote-character-menu-side');
     } else {
         menu.classList.add('quote-character-menu-inline');
