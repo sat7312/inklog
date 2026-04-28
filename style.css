@@ -1062,6 +1062,21 @@ button {
     font-size: 16px;
 }
 
+.btn-library-view-toggle svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.btn-library-view-toggle.active {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
 .profile-color-row {
     display: flex;
     align-items: center;
@@ -1690,28 +1705,6 @@ input[type="color"] {
 .library-reader-content {
     flex: 1;
     padding: 24px;
-}
-
-.library-read-toggle {
-    align-items: center;
-    justify-content: center;
-    min-width: 92px;
-    height: 38px;
-    padding: 0 18px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.library-read-toggle:hover {
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    background: var(--accent-blue-dim);
 }
 
 .library-empty-reader {

@@ -3,6 +3,7 @@
 
 let chapters = [];
 let selectedChapterId = null;
+let currentLibraryViewMode = 'description';
 let readerScrollRaf = null;
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -84,6 +85,28 @@ function saveChapters() {
     localStorage.setItem(CHAPTER_LIBRARY_STORAGE_KEY, JSON.stringify(chapters));
 }
 
+function getLibraryViewIcon(isReaderMode) {
+    if (isReaderMode) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="14" y2="17"></line></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H11v18H5.5A2.5 2.5 0 0 0 3 23V5.5z"></path><path d="M21 5.5A2.5 2.5 0 0 0 18.5 3H13v18h5.5A2.5 2.5 0 0 1 21 23V5.5z"></path></svg>';
+}
+
+function getLibraryViewToggleLabel(chapterId) {
+    return selectedChapterId === chapterId && currentLibraryViewMode === 'reader' ? '작품 소개' : '읽기';
+}
+
+function updateChapterViewToggleButtons() {
+    document.querySelectorAll('.btn-library-view-toggle').forEach(function (button) {
+        const label = getLibraryViewToggleLabel(button.dataset.id);
+        const isReaderMode = label === '작품 소개';
+        button.title = label;
+        button.setAttribute('aria-label', label);
+        button.innerHTML = getLibraryViewIcon(isReaderMode);
+        button.classList.toggle('active', isReaderMode);
+    });
+}
+
 function renderChapterList() {
     const chapterList = document.getElementById('chapterList');
     if (!chapterList) return;
@@ -126,6 +149,7 @@ function renderChapterList() {
             '</div>' +
             '</div>' +
             '<div class="page-controls">' +
+            '<button class="btn-move btn-library-view-toggle" data-id="' + chapter.id + '" title="' + getLibraryViewToggleLabel(chapter.id) + '" aria-label="' + getLibraryViewToggleLabel(chapter.id) + '">' + getLibraryViewIcon(selectedChapterId === chapter.id && currentLibraryViewMode === 'reader') + '</button>' +
             '<button class="btn-move btn-edit-chapter" data-id="' + chapter.id + '" title="편집">✎</button>' +
             '<button class="btn-delete-page btn-delete-chapter" data-id="' + chapter.id + '" title="삭제">×</button>' +
             '</div>' +
@@ -138,6 +162,10 @@ function renderChapterList() {
         }
     });
 
+    if (!selectedChapterId) {
+        renderDescription(null);
+    }
+
     chapterList.querySelectorAll('.btn-delete-chapter').forEach(function (button) {
         button.addEventListener('click', function (event) {
             event.stopPropagation();
@@ -149,6 +177,13 @@ function renderChapterList() {
         button.addEventListener('click', function (event) {
             event.stopPropagation();
             editChapter(event.target.dataset.id);
+        });
+    });
+
+    chapterList.querySelectorAll('.btn-library-view-toggle').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleChapterView(button.dataset.id);
         });
     });
 
@@ -173,6 +208,22 @@ function selectChapter(id) {
         return item.id === id;
     });
     renderDescription(chapter);
+    renderChapterList();
+}
+
+function toggleChapterView(id) {
+    const chapter = chapters.find(function (item) {
+        return item.id === id;
+    });
+    if (!chapter) return;
+
+    const shouldShowDescription = selectedChapterId === id && currentLibraryViewMode === 'reader';
+    selectedChapterId = id;
+    if (shouldShowDescription) {
+        renderDescription(chapter);
+    } else {
+        renderReader(chapter);
+    }
     renderChapterList();
 }
 
@@ -351,23 +402,18 @@ function setupReaderInteractions() {
 function renderDescription(chapter) {
     const title = document.getElementById('readerTitle');
     const content = document.getElementById('readerContent');
-    const readButton = document.getElementById('readSelectedChapter');
     if (!title || !content) return;
+    currentLibraryViewMode = 'description';
 
     if (!chapter) {
         title.textContent = 'Description';
         content.innerHTML = '<div class="library-empty-reader">저장된 작품을 선택하면 소개 페이지가 표시됩니다.</div>';
-        if (readButton) readButton.style.display = 'none';
         updateActiveOutlineItem(null);
+        updateChapterViewToggleButtons();
         return;
     }
 
     title.textContent = 'Description';
-    if (readButton) {
-        readButton.textContent = '읽기';
-        readButton.style.display = 'inline-flex';
-        readButton.onclick = function () { renderReader(chapter); };
-    }
     if (chapter.data) {
         content.innerHTML = '<div class="library-intro-description">' + generateIntroHTML(chapter.data) + '</div>';
     } else if (chapter.descriptionHtml) {
@@ -376,20 +422,16 @@ function renderDescription(chapter) {
         content.innerHTML = '<div class="library-empty-reader">이 작품은 Intro Preview가 저장되기 전에 생성되었습니다. 작품 편집 후 다시 저장하세요.</div>';
     }
     updateActiveOutlineItem(null);
+    updateChapterViewToggleButtons();
 }
 
 function renderReader(chapter) {
     const title = document.getElementById('readerTitle');
     const content = document.getElementById('readerContent');
-    const readButton = document.getElementById('readSelectedChapter');
     if (!title || !content || !chapter) return;
+    currentLibraryViewMode = 'reader';
 
     title.textContent = chapter.title || 'Reader';
-    if (readButton) {
-        readButton.textContent = '작품 소개';
-        readButton.style.display = 'inline-flex';
-        readButton.onclick = function () { renderDescription(chapter); };
-    }
 
     const readerData = chapter.data
         ? Object.assign({}, chapter.data, {
@@ -404,6 +446,7 @@ function renderReader(chapter) {
         ? generateHTML(readerData, true)
         : (chapter.html || '<div class="library-empty-reader">읽을 본문이 없습니다.</div>');
     setupReaderInteractions();
+    updateChapterViewToggleButtons();
 }
 
 function deleteChapter(id) {
