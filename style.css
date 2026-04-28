@@ -1626,20 +1626,6 @@ input[type="color"] {
     flex-shrink: 0;
 }
 
-.library-work-num {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    color: var(--page-num-color);
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1;
-    flex: 0 0 36px;
-}
-
 .library-layout {
     display: grid;
     grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
@@ -1708,8 +1694,7 @@ input[type="color"] {
     box-shadow: 0 0 0 1px var(--accent-blue-dim);
 }
 
-.selected-chapter .page-item-name,
-.selected-chapter .library-work-num {
+.selected-chapter .page-item-name {
     color: var(--accent-blue);
 }
 
@@ -1717,7 +1702,7 @@ input[type="color"] {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin: -4px 0 12px 52px;
+    margin: -4px 0 12px 14px;
     padding: 8px 0 8px 14px;
     border-left: 1px solid var(--border-color);
 }
@@ -1745,19 +1730,36 @@ input[type="color"] {
     color: var(--text-main);
 }
 
-.library-outline-row.active {
-    background: var(--accent-blue-dim);
+.library-outline-row.active-section {
     color: var(--accent-blue);
-    box-shadow: inset 2px 0 0 var(--accent-blue);
 }
 
-.library-outline-row.active .library-outline-marker {
+.library-outline-row.active-section .library-outline-marker {
     color: var(--accent-blue);
+}
+
+.library-outline-row.active-page {
+    background: var(--page-item-hover-bg);
+    color: var(--text-main);
+    box-shadow: inset 2px 0 0 var(--page-num-color);
+}
+
+.library-outline-row.active-page .library-outline-marker {
+    color: var(--text-muted);
 }
 
 .library-outline-section {
     margin-top: 6px;
     color: var(--accent-blue);
+}
+
+.library-outline-section .library-outline-marker {
+    font-size: 11px;
+}
+
+.library-outline-section .library-outline-title {
+    font-size: 13px;
+    font-weight: 600;
 }
 
 .library-outline-section:first-child {

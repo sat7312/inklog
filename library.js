@@ -107,7 +107,7 @@ function renderChapterList() {
         return;
     }
 
-    chapters.forEach(function (chapter, index) {
+    chapters.forEach(function (chapter) {
         const item = document.createElement('div');
         item.className = 'page-item' + (chapter.id === selectedChapterId ? ' selected-chapter' : '');
         item.dataset.chapterId = chapter.id;
@@ -119,7 +119,6 @@ function renderChapterList() {
         item.innerHTML =
             '<div class="page-item-header">' +
             '<div class="page-item-main">' +
-            '<span class="library-work-num">' + (index + 1) + '</span>' +
             '<div class="page-item-info">' +
             '<div class="page-item-name">' + escapeHtml(chapter.title || 'Untitled Chapter') + '</div>' +
             '<div class="page-item-preview">' + escapeHtml(preview).replace(/\n/g, ' ').substring(0, 90) + '</div>' +
@@ -203,10 +202,12 @@ function createChapterOutline(chapter) {
 
     let html = '';
     let pageNumber = 0;
+    let currentSectionAnchor = '';
     pageItems.forEach(function (item, index) {
         if (item.itemType === 'section') {
             pageNumber = 0;
-            html += '<button type="button" class="library-outline-row library-outline-section" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('section', index)) + '" aria-current="false">' +
+            currentSectionAnchor = getLibraryReaderAnchorId('section', index);
+            html += '<button type="button" class="library-outline-row library-outline-section" data-anchor="' + escapeHtml(currentSectionAnchor) + '" data-outline-type="section" aria-current="false">' +
                 '<span class="library-outline-marker">SECTION</span>' +
                 '<span class="library-outline-title">' + escapeHtml(getOutlineLabel(item, 'Section')) + '</span>' +
                 '</button>';
@@ -214,7 +215,7 @@ function createChapterOutline(chapter) {
         }
 
         pageNumber++;
-        html += '<button type="button" class="library-outline-row library-outline-page" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('page', index)) + '" aria-current="false">' +
+        html += '<button type="button" class="library-outline-row library-outline-page" data-anchor="' + escapeHtml(getLibraryReaderAnchorId('page', index)) + '" data-section-anchor="' + escapeHtml(currentSectionAnchor) + '" data-outline-type="page" aria-current="false">' +
             '<span class="library-outline-marker">#' + pageNumber + '</span>' +
             '<span class="library-outline-title">' + escapeHtml(getOutlineLabel(item, 'Page ' + pageNumber)) + '</span>' +
             '</button>';
@@ -247,10 +248,20 @@ function scrollLibraryReaderTo(anchorId) {
 
 function updateActiveOutlineItem(anchorId) {
     const outlineRows = document.querySelectorAll('.library-outline-row');
+    let activeRow = null;
     outlineRows.forEach(function (row) {
-        const isActive = !!anchorId && row.dataset.anchor === anchorId;
-        row.classList.toggle('active', isActive);
-        row.setAttribute('aria-current', isActive ? 'true' : 'false');
+        if (anchorId && row.dataset.anchor === anchorId) activeRow = row;
+    });
+    const activeSectionAnchor = activeRow && activeRow.dataset.outlineType === 'page'
+        ? activeRow.dataset.sectionAnchor
+        : '';
+
+    outlineRows.forEach(function (row) {
+        const isActivePage = !!activeRow && row === activeRow && row.dataset.outlineType === 'page';
+        const isActiveSection = !!activeSectionAnchor && row.dataset.anchor === activeSectionAnchor;
+        row.classList.toggle('active-page', isActivePage);
+        row.classList.toggle('active-section', isActiveSection);
+        row.setAttribute('aria-current', isActivePage ? 'true' : 'false');
     });
 }
 
