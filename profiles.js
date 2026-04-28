@@ -253,11 +253,33 @@ function moveProfileToIndex(fromIndex, toIndex) {
     if (fromIndex === toIndex) return;
     if (fromIndex < 0 || fromIndex >= profiles.length || toIndex < 0 || toIndex > profiles.length - 1) return;
 
+    const oldProfiles = profiles.slice();
     const item = profiles.splice(fromIndex, 1)[0];
     profiles.splice(toIndex, 0, item);
+    remapCharacterQuoteIndexes(oldProfiles, profiles);
     updateProfilesList();
     updatePreview();
     saveToStorage();
+}
+
+function remapCharacterQuoteIndexes(oldProfiles, newProfiles) {
+    const indexMap = {};
+    oldProfiles.forEach(function (profile, oldIndex) {
+        const newIndex = newProfiles.indexOf(profile);
+        if (newIndex >= 0 && newIndex !== oldIndex) {
+            indexMap[oldIndex] = newIndex;
+        }
+    });
+
+    if (Object.keys(indexMap).length === 0) return;
+
+    pages.forEach(function (page) {
+        if (!page || page.itemType === 'section' || !page.content) return;
+        page.content = page.content.replace(/\[CHAR:(\d+)\]/g, function (match, profileIndex) {
+            const mappedIndex = indexMap[profileIndex];
+            return mappedIndex !== undefined ? '[CHAR:' + mappedIndex + ']' : match;
+        });
+    });
 }
 
 function setupProfilesDragSort(profilesList) {
@@ -350,22 +372,12 @@ function setupProfilesDragSort(profilesList) {
 
 function moveProfileUp(index) {
     if (index > 0) {
-        const temp = profiles[index];
-        profiles[index] = profiles[index - 1];
-        profiles[index - 1] = temp;
-        updateProfilesList();
-        updatePreview();
-        saveToStorage();
+        moveProfileToIndex(index, index - 1);
     }
 }
 
 function moveProfileDown(index) {
     if (index < profiles.length - 1) {
-        const temp = profiles[index];
-        profiles[index] = profiles[index + 1];
-        profiles[index + 1] = temp;
-        updateProfilesList();
-        updatePreview();
-        saveToStorage();
+        moveProfileToIndex(index, index + 1);
     }
 }
