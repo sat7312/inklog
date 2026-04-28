@@ -1,12 +1,142 @@
-function loadFromStorage() {
+const LOCAL_IMAGE_DB_NAME = 'inklogLocalImages';
+const LOCAL_IMAGE_DB_VERSION = 1;
+const LOCAL_IMAGE_STORE_NAME = 'images';
+
+function openLocalImageDB() {
+    return new Promise(function (resolve, reject) {
+        if (!window.indexedDB) {
+            reject(new Error('IndexedDB를 사용할 수 없습니다.'));
+            return;
+        }
+
+        const request = indexedDB.open(LOCAL_IMAGE_DB_NAME, LOCAL_IMAGE_DB_VERSION);
+        request.onupgradeneeded = function () {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(LOCAL_IMAGE_STORE_NAME)) {
+                db.createObjectStore(LOCAL_IMAGE_STORE_NAME, { keyPath: 'id' });
+            }
+        };
+        request.onsuccess = function () { resolve(request.result); };
+        request.onerror = function () { reject(request.error || new Error('IndexedDB 열기 실패')); };
+    });
+}
+
+function readAllLocalImagesFromIndexedDB() {
+    return openLocalImageDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            const tx = db.transaction(LOCAL_IMAGE_STORE_NAME, 'readonly');
+            const store = tx.objectStore(LOCAL_IMAGE_STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = function () {
+                const images = {};
+                (request.result || []).forEach(function (image) {
+                    if (image && image.id) {
+                        images[image.id] = {
+                            dataUrl: image.dataUrl || '',
+                            name: image.name || '',
+                            createdAt: image.createdAt || ''
+                        };
+                    }
+                });
+                resolve(images);
+            };
+            request.onerror = function () { reject(request.error || new Error('이미지 읽기 실패')); };
+        }).finally(function () {
+            db.close();
+        });
+    }).catch(function (error) {
+        console.warn('IndexedDB local image read failed:', error);
+        return {};
+    });
+}
+
+function saveLocalImageToIndexedDB(id, image) {
+    if (!id || !image || !image.dataUrl) return Promise.resolve();
+    return openLocalImageDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            const tx = db.transaction(LOCAL_IMAGE_STORE_NAME, 'readwrite');
+            tx.objectStore(LOCAL_IMAGE_STORE_NAME).put({
+                id: id,
+                dataUrl: image.dataUrl,
+                name: image.name || '',
+                createdAt: image.createdAt || new Date().toISOString()
+            });
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function () { reject(tx.error || new Error('이미지 저장 실패')); };
+        }).finally(function () {
+            db.close();
+        });
+    }).catch(function (error) {
+        console.warn('IndexedDB local image save failed:', error);
+    });
+}
+
+function saveLocalImagesToIndexedDB(images) {
+    const entries = Object.entries(images || {}).filter(function (entry) {
+        return entry[1] && entry[1].dataUrl;
+    });
+    return Promise.all(entries.map(function (entry) {
+        return saveLocalImageToIndexedDB(entry[0], entry[1]);
+    }));
+}
+
+function deleteLocalImageFromIndexedDB(id) {
+    if (!id) return Promise.resolve();
+    return openLocalImageDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            const tx = db.transaction(LOCAL_IMAGE_STORE_NAME, 'readwrite');
+            tx.objectStore(LOCAL_IMAGE_STORE_NAME).delete(id);
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function () { reject(tx.error || new Error('이미지 삭제 실패')); };
+        }).finally(function () {
+            db.close();
+        });
+    }).catch(function (error) {
+        console.warn('IndexedDB local image delete failed:', error);
+    });
+}
+
+function getLocalImageManifest(images) {
+    if (typeof window !== 'undefined' && !window.indexedDB) {
+        return JSON.parse(JSON.stringify(images || {}));
+    }
+
+    const manifest = {};
+    Object.keys(images || {}).forEach(function (id) {
+        const image = images[id] || {};
+        manifest[id] = {
+            name: image.name || '',
+            createdAt: image.createdAt || ''
+        };
+    });
+    return manifest;
+}
+
+async function hydrateLocalImages(imageManifest) {
+    const storedImages = await readAllLocalImagesFromIndexedDB();
+    const hydrated = {};
+    Object.keys(imageManifest || {}).forEach(function (id) {
+        hydrated[id] = Object.assign({}, imageManifest[id], storedImages[id] || {});
+    });
+    Object.keys(storedImages || {}).forEach(function (id) {
+        if (!hydrated[id]) hydrated[id] = storedImages[id];
+    });
+    await saveLocalImagesToIndexedDB(hydrated);
+    return hydrated;
+}
+
+async function loadFromStorage() {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             const data = migrateEditorData(JSON.parse(saved), {
                 fallbackEditorTitle: getEditingChapterTitle()
             });
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            data.localImages = await hydrateLocalImages(data.localImages || {});
             applyEditorDataToForm(data);
+            _suppressDirtyIndicator = true;
+            saveToStorage();
+            _suppressDirtyIndicator = false;
         } else {
             loadDefaultSettings();
         }
@@ -162,7 +292,7 @@ function collectEditorData(extraData) {
         replacements: replacements,
         customThemes: customThemes,
         profiles: profiles,
-        localImages: localImages,
+        localImages: getLocalImageManifest(localImages),
         characters: getProfileCharacters(),
         textSpacing: textSpacing,
         fontFamily: fontFamily,
@@ -517,6 +647,7 @@ function showDirtyIndicator() {
 
 function saveToStorage() {
     try {
+        saveLocalImagesToIndexedDB(localImages);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(collectEditorData()));
         updateImageStorageSummary();
         if (!_suppressDirtyIndicator) showDirtyIndicator();
@@ -821,7 +952,10 @@ function cleanupUnusedLocalImages() {
 
     const usedIds = collectUsedLocalImageIds();
     Object.keys(localImages || {}).forEach(function (id) {
-        if (!usedIds.has(id)) delete localImages[id];
+        if (!usedIds.has(id)) {
+            delete localImages[id];
+            deleteLocalImageFromIndexedDB(id);
+        }
     });
 
     saveToStorage();
@@ -836,6 +970,7 @@ function exportDataToJSON() {
         const presets = savedPresets ? JSON.parse(savedPresets) : {};
 
         const data = collectEditorData({
+            localImages: localImages,
             presets: presets,
             exportDate: new Date().toISOString(),
             schemaVersion: EDITOR_DATA_SCHEMA_VERSION
@@ -871,7 +1006,7 @@ function exportDataToJSON() {
 function importDataFromJSON(file) {
     const reader = new FileReader();
 
-    reader.onload = function (e) {
+    reader.onload = async function (e) {
         try {
             let data = JSON.parse(e.target.result);
 
@@ -882,6 +1017,7 @@ function importDataFromJSON(file) {
             if (!confirm('현재 작업 중인 데이터가 모두 사라집니다. 불러오시겠습니까?')) return;
 
             data = migrateEditorData(data);
+            await saveLocalImagesToIndexedDB(data.localImages || {});
             applyEditorDataToForm(data);
 
             if (data.presets && typeof data.presets === 'object') {

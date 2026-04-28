@@ -43,6 +43,27 @@ function loadImageFromDataUrl(dataUrl) {
     });
 }
 
+function canvasToDataUrl(canvas, type, quality) {
+    return new Promise(function (resolve) {
+        if (!canvas.toBlob) {
+            resolve(canvas.toDataURL(type, quality));
+            return;
+        }
+
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                resolve(canvas.toDataURL(type, quality));
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function () { resolve(reader.result); };
+            reader.onerror = function () { resolve(canvas.toDataURL(type, quality)); };
+            reader.readAsDataURL(blob);
+        }, type, quality);
+    });
+}
+
 async function prepareLocalImage(file) {
     if (!file || !file.type || !file.type.startsWith('image/')) {
         throw new Error('이미지 파일을 선택해주세요.');
@@ -54,7 +75,7 @@ async function prepareLocalImage(file) {
     }
 
     const image = await loadImageFromDataUrl(dataUrl);
-    const maxSize = 1600;
+    const maxSize = 1280;
     const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
     const height = Math.max(1, Math.round(image.naturalHeight * scale));
@@ -65,7 +86,12 @@ async function prepareLocalImage(file) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(image, 0, 0, width, height);
 
-    return canvas.toDataURL('image/jpeg', 0.86);
+    const webpDataUrl = await canvasToDataUrl(canvas, 'image/webp', 0.78);
+    const optimizedDataUrl = webpDataUrl.startsWith('data:image/webp')
+        ? webpDataUrl
+        : await canvasToDataUrl(canvas, 'image/jpeg', 0.82);
+
+    return optimizedDataUrl.length < dataUrl.length ? optimizedDataUrl : dataUrl;
 }
 
 function selectLocalImage(onSelect) {
@@ -103,6 +129,9 @@ function createLocalImageRef(dataUrl, file) {
         name: file && file.name ? file.name : '',
         createdAt: new Date().toISOString()
     };
+    if (typeof saveLocalImageToIndexedDB === 'function') {
+        saveLocalImageToIndexedDB(id, localImages[id]);
+    }
     return 'local:' + id;
 }
 

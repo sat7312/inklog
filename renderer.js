@@ -259,7 +259,9 @@ function resolveImageUrl(url, ctx) {
     const normalized = normalizeImageUrl(url);
     if (normalized.startsWith('local:')) {
         const id = normalized.slice('local:'.length);
-        return (ctx && ctx.localImages && ctx.localImages[id] && ctx.localImages[id].dataUrl) || '';
+        return (ctx && ctx.localImages && ctx.localImages[id] && ctx.localImages[id].dataUrl)
+            || (typeof localImages !== 'undefined' && localImages && localImages[id] && localImages[id].dataUrl)
+            || '';
     }
     return normalized;
 }

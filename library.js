@@ -6,11 +6,12 @@ let selectedChapterId = null;
 let currentLibraryViewMode = 'description';
 let readerScrollRaf = null;
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     setupThemeToggle();
     setupCreditModal();
     setupPanelToggle();
     setupLibraryControls();
+    localImages = await hydrateLocalImages({});
     loadChapters();
     renderChapterList();
 });
@@ -65,6 +66,15 @@ function loadChapters() {
             const data = migrateEditorData(chapter.data, {
                 fallbackEditorTitle: chapter.title || ''
             });
+            const imageManifest = getLocalImageManifest(data.localImages || {});
+            Object.keys(data.localImages || {}).forEach(function (id) {
+                if (data.localImages[id] && data.localImages[id].dataUrl) {
+                    localImages[id] = data.localImages[id];
+                }
+            });
+            saveLocalImagesToIndexedDB(data.localImages || {});
+            if (JSON.stringify(data.localImages || {}) !== JSON.stringify(imageManifest)) migrated = true;
+            data.localImages = imageManifest;
             if (beforeVersion !== data.schemaVersion) migrated = true;
             return Object.assign({}, chapter, {
                 title: chapter.title || data.editorTitle || data.coverTitle || 'Untitled Chapter',

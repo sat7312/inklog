@@ -2,12 +2,12 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
 });
 
-function initializeApp() {
+async function initializeApp() {
     try {
         setupThemeToggle();
         setupCreditModal();
         setupPanelToggle();
-        loadFromStorage();
+        await loadFromStorage();
         setupEventListeners();
         setupTabs();
         initializePresets();
