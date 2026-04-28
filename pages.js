@@ -339,9 +339,13 @@ function setupPagesDragSort(pagesList) {
         } else {
             target.before(placeholder);
         }
+        requestAnimationFrame(function () {
+            placeholder.classList.add('expanded');
+        });
     }
 
     function removePlaceholder() {
+        placeholder.classList.remove('expanded');
         if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
     }
 
@@ -355,7 +359,9 @@ function setupPagesDragSort(pagesList) {
             }
             draggedIndex = parseInt(item.dataset.index);
             item.dataset.suppressClick = 'true';
-            item.classList.add('dragging');
+            requestAnimationFrame(function () {
+                item.classList.add('dragging');
+            });
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', String(draggedIndex));
         });
