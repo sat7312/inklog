@@ -3,6 +3,7 @@ const STORAGE_KEY = 'rpLogEditorData';
 const CHAPTER_LIBRARY_STORAGE_KEY = 'rpLogChapterLibrary';
 const EDITING_CHAPTER_KEY = 'rpLogEditingChapterId';
 const THEME_KEY = 'owb_ui_theme';
+const EDITOR_DATA_SCHEMA_VERSION = 2;
 
 let notificationTimer = null;
 

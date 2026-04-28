@@ -56,6 +56,23 @@ function loadChapters() {
     try {
         const saved = localStorage.getItem(CHAPTER_LIBRARY_STORAGE_KEY);
         chapters = saved ? JSON.parse(saved) : [];
+        let migrated = false;
+        chapters = chapters.map(function (chapter) {
+            if (!chapter || !chapter.data || typeof migrateEditorData !== 'function') return chapter;
+            const beforeVersion = chapter.data.schemaVersion;
+            const data = migrateEditorData(chapter.data, {
+                fallbackEditorTitle: chapter.title || ''
+            });
+            if (beforeVersion !== data.schemaVersion) migrated = true;
+            return Object.assign({}, chapter, {
+                title: chapter.title || data.editorTitle || data.coverTitle || 'Untitled Chapter',
+                subtitle: chapter.subtitle || data.coverSubtitle || '',
+                summary: chapter.summary || data.summaryText || '',
+                coverImage: chapter.coverImage || data.coverImage || '',
+                data: data
+            });
+        });
+        if (migrated) saveChapters();
     } catch (error) {
         console.error('Failed to load chapter library:', error);
         chapters = [];
@@ -230,7 +247,9 @@ function editChapter(id) {
         return;
     }
 
-    const editorData = Object.assign({}, chapter.data, { editorTitle: chapter.title || chapter.data.editorTitle || '' });
+    const editorData = typeof migrateEditorData === 'function'
+        ? migrateEditorData(chapter.data, { fallbackEditorTitle: chapter.title || '' })
+        : Object.assign({}, chapter.data, { editorTitle: chapter.title || chapter.data.editorTitle || '' });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(editorData));
     localStorage.setItem(EDITING_CHAPTER_KEY, id);
     window.location.href = 'editor.html';

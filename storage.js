@@ -2,252 +2,11 @@ function loadFromStorage() {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
-            const data = JSON.parse(saved);
-            localImages = data.localImages || {};
-            editorTitle = data.editorTitle || getEditingChapterTitle() || '';
-            data.coverImage = migrateLocalImageValue(data.coverImage);
-
-            const useRoundedQuotes = document.getElementById('useRoundedQuotes');
-            const useTextIndent = document.getElementById('useTextIndent');
-            const coverImage = document.getElementById('coverImage');
-            const coverZoom = document.getElementById('coverZoom');
-            const coverFocusX = document.getElementById('coverFocusX');
-            const coverFocusY = document.getElementById('coverFocusY');
-            const coverAutoFit = document.getElementById('coverAutoFit');
-            const coverArchiveNo = document.getElementById('coverArchiveNo');
-            const coverTitle = document.getElementById('coverTitle');
-            const coverSubtitle = document.getElementById('coverSubtitle');
-
-            if (useRoundedQuotes) useRoundedQuotes.checked = data.useRoundedQuotes || false;
-            if (useTextIndent) useTextIndent.checked = data.useTextIndent || false;
-            const preserveLineBreaks = document.getElementById('preserveLineBreaks');
-            if (preserveLineBreaks) preserveLineBreaks.checked = data.preserveLineBreaks || false;
-
-            if (coverImage) coverImage.value = data.coverImage || '';
-            if (coverAutoFit) coverAutoFit.checked = data.coverAutoFit || false;
-            if (coverZoom) coverZoom.value = data.coverZoom || 120;
-            if (coverFocusX) coverFocusX.value = data.coverFocusX || 50;
-            if (coverFocusY) coverFocusY.value = data.coverFocusY || 28;
-            if (coverArchiveNo) coverArchiveNo.value = data.coverArchiveNo || 'ARCHIVE NO.001';
-            if (coverTitle) coverTitle.value = data.coverTitle || '';
-            if (coverSubtitle) coverSubtitle.value = data.coverSubtitle || '';
-
-            const coverManualControls = document.getElementById('coverManualControls');
-            if (coverManualControls) {
-                coverManualControls.style.display = (data.coverAutoFit) ? 'none' : 'block';
-            }
-
-            const coverZoomValue = document.getElementById('coverZoomValue');
-            const coverFocusXValue = document.getElementById('coverFocusXValue');
-            const coverFocusYValue = document.getElementById('coverFocusYValue');
-            const summaryText = document.getElementById('summaryText');
-            const enableCommentEl = document.getElementById('enableComment');
-            const commentText = document.getElementById('commentText');
-            const commentNickname = document.getElementById('commentNickname');
-            const commentContent = document.getElementById('commentContent');
-            const enableTagsEl = document.getElementById('enableTags');
-
-            if (coverZoomValue) coverZoomValue.textContent = (data.coverZoom || 120) + '%';
-            if (coverFocusXValue) coverFocusXValue.textContent = (data.coverFocusX || 50) + '%';
-            if (coverFocusYValue) coverFocusYValue.textContent = (data.coverFocusY || 28) + '%';
-
-            if (summaryText) summaryText.value = data.summaryText || '';
-            if (enableCommentEl) enableCommentEl.checked = data.enableComment || false;
-            if (commentText) commentText.value = data.commentText || '';
-            if (commentNickname) commentNickname.value = data.commentNickname || '';
-            if (commentContent) commentContent.style.display = data.enableComment ? 'block' : 'none';
-            if (enableTagsEl) enableTagsEl.checked = data.enableTags !== undefined ? data.enableTags : true;
-
-            if (data.customColors) {
-                setColorInputValue('customBg', data.customColors.bg);
-                setColorInputValue('customText', data.customColors.text);
-                setColorInputValue('customEm', data.customColors.em);
-                setColorInputValue('customHeader', data.customColors.header || data.customColors.line || data.customColors.headerText);
-                setColorInputValue('customQuote1Bg', data.customColors.quote1Bg);
-                setColorInputValue('customQuote1Text', data.customColors.quote1Text);
-                setColorInputValue('customQuote2Bg', data.customColors.quote2Bg);
-                setColorInputValue('customQuote2Text', data.customColors.quote2Text);
-                setColorInputValue('customTagText', data.customColors.tagText || data.customColors.text);
-                setColorInputValue('customDivider', data.customColors.divider || data.customColors.tagText || data.customColors.text);
-            }
-
-            pages = data.pages || [];
-            pages = pages.map(function (item) {
-                if (!item.itemType) item.itemType = 'page';
-                if (item.itemType === 'page') item.collapsed = false;
-                if (item.content) item.content = migrateLocalImagesInText(item.content);
-                if (item.image) item.image = migrateLocalImageValue(item.image);
-                if (item.bgImage) item.bgImage = migrateLocalImageValue(item.bgImage);
-                if (item.headerImage) item.headerImage = migrateLocalImageValue(item.headerImage);
-                if (item.itemType === 'page' && (item.imageWidth === undefined || item.imageWidth === null)) {
-                    item.imageWidth = 100;
-                }
-                return item;
+            const data = migrateEditorData(JSON.parse(saved), {
+                fallbackEditorTitle: getEditingChapterTitle()
             });
-
-            if (data.tags && data.tags.length > 0) {
-                tags = JSON.parse(JSON.stringify(data.tags));
-            } else {
-                tags = JSON.parse(JSON.stringify(DEFAULT_TAGS));
-            }
-            while (tags.length < 3) {
-                tags.push(JSON.parse(JSON.stringify(DEFAULT_TAGS[tags.length])));
-            }
-
-            replacements = data.replacements || [];
-            customThemes = data.customThemes || [];
-
-            if (data.textSpacing) {
-                textSpacing = { ...textSpacing, ...data.textSpacing };
-                const textSizeInput = document.getElementById('textSizeInput');
-                const textSizeSlider = document.getElementById('textSizeSlider');
-                const lineHeightInput = document.getElementById('lineHeightInput');
-                const lineHeightSlider = document.getElementById('lineHeightSlider');
-                const letterSpacingInput = document.getElementById('letterSpacingInput');
-                const letterSpacingSlider = document.getElementById('letterSpacingSlider');
-                const paragraphSpacingInput = document.getElementById('paragraphSpacingInput');
-                const paragraphSpacingSlider = document.getElementById('paragraphSpacingSlider');
-                const textIndentInput = document.getElementById('textIndentInput');
-                const textIndentSlider = document.getElementById('textIndentSlider');
-
-                if (textSizeInput) textSizeInput.value = textSpacing.fontSize;
-                if (textSizeSlider) textSizeSlider.value = textSpacing.fontSize;
-                if (lineHeightInput) lineHeightInput.value = textSpacing.lineHeight;
-                if (lineHeightSlider) lineHeightSlider.value = textSpacing.lineHeight;
-                if (letterSpacingInput) letterSpacingInput.value = textSpacing.letterSpacing;
-                if (letterSpacingSlider) letterSpacingSlider.value = textSpacing.letterSpacing;
-                if (paragraphSpacingInput) paragraphSpacingInput.value = textSpacing.paragraphSpacing;
-                if (paragraphSpacingSlider) paragraphSpacingSlider.value = textSpacing.paragraphSpacing;
-                if (textIndentInput) textIndentInput.value = textSpacing.textIndent;
-                if (textIndentSlider) textIndentSlider.value = textSpacing.textIndent;
-
-                const _sd = document.getElementById('textSizeDisplay'); if (_sd) _sd.textContent = textSpacing.fontSize.toFixed(1) + 'px';
-                const _lhd = document.getElementById('lineHeightDisplay'); if (_lhd) _lhd.textContent = textSpacing.lineHeight.toFixed(2);
-                const _lsd = document.getElementById('letterSpacingDisplay'); if (_lsd) _lsd.textContent = textSpacing.letterSpacing.toFixed(1) + 'px';
-                const _psd = document.getElementById('paragraphSpacingDisplay'); if (_psd) _psd.textContent = textSpacing.paragraphSpacing + 'px';
-                const _tid = document.getElementById('textIndentDisplay'); if (_tid) _tid.textContent = textSpacing.textIndent + 'px';
-            } else {
-                const textSizeInput = document.getElementById('textSizeInput');
-                const textSizeSlider = document.getElementById('textSizeSlider');
-                const lineHeightInput = document.getElementById('lineHeightInput');
-                const lineHeightSlider = document.getElementById('lineHeightSlider');
-                const letterSpacingInput = document.getElementById('letterSpacingInput');
-                const letterSpacingSlider = document.getElementById('letterSpacingSlider');
-                const paragraphSpacingInput = document.getElementById('paragraphSpacingInput');
-                const paragraphSpacingSlider = document.getElementById('paragraphSpacingSlider');
-                const textIndentInput = document.getElementById('textIndentInput');
-                const textIndentSlider = document.getElementById('textIndentSlider');
-
-                if (textSizeInput) textSizeInput.value = 14.2;
-                if (textSizeSlider) textSizeSlider.value = 14.2;
-                if (lineHeightInput) lineHeightInput.value = 1.7;
-                if (lineHeightSlider) lineHeightSlider.value = 1.7;
-                if (letterSpacingInput) letterSpacingInput.value = -0.5;
-                if (letterSpacingSlider) letterSpacingSlider.value = -0.5;
-                if (paragraphSpacingInput) paragraphSpacingInput.value = 10;
-                if (paragraphSpacingSlider) paragraphSpacingSlider.value = 10;
-                if (textIndentInput) textIndentInput.value = 0;
-                if (textIndentSlider) textIndentSlider.value = 0;
-            }
-
-            if (data.fontFamily) {
-                fontFamily = data.fontFamily;
-                const fontFamilyEl = document.getElementById('fontFamily');
-                if (fontFamilyEl) fontFamilyEl.value = fontFamily;
-            }
-
-            if (data.headingFontSizes) {
-                headingFontSizes = { ...headingFontSizes, ...data.headingFontSizes };
-                const map = {
-                    coverTitle:      { slider: 'coverTitleSizeSlider',      input: 'coverTitleSizeInput',      display: 'coverTitleSizeDisplay' },
-                    coverSubtitle:   { slider: 'coverSubtitleSizeSlider',   input: 'coverSubtitleSizeInput',   display: 'coverSubtitleSizeDisplay' },
-                    sectionTitle:    { slider: 'sectionTitleSizeSlider',    input: 'sectionTitleSizeInput',    display: 'sectionTitleSizeDisplay' },
-                    sectionSubtitle: { slider: 'sectionSubtitleSizeSlider', input: 'sectionSubtitleSizeInput', display: 'sectionSubtitleSizeDisplay' },
-                    pageHeaderNum:   { slider: 'pageHeaderNumSizeSlider',   input: 'pageHeaderNumSizeInput',   display: 'pageHeaderNumSizeDisplay' },
-                    pageHeaderTitle: { slider: 'pageHeaderTitleSizeSlider', input: 'pageHeaderTitleSizeInput', display: 'pageHeaderTitleSizeDisplay' },
-                };
-                Object.keys(headingFontSizes).forEach(k => {
-                    if (!map[k]) return;
-                    const sl = document.getElementById(map[k].slider);
-                    const inp = document.getElementById(map[k].input);
-                    const dsp = document.getElementById(map[k].display);
-                    if (sl) sl.value = headingFontSizes[k];
-                    if (inp) inp.value = headingFontSizes[k];
-                    if (dsp) dsp.textContent = headingFontSizes[k] + 'px';
-                });
-            }
-
-            if (data.globalTheme) {
-                globalTheme = data.globalTheme;
-                const globalThemeEl = document.getElementById('globalTheme');
-                if (globalThemeEl) globalThemeEl.value = globalTheme;
-            }
-
-            if (data.hidePageNumbers !== undefined) {
-                hidePageNumbers = data.hidePageNumbers;
-                const hidePageNumbersEl = document.getElementById('hidePageNumbers');
-                if (hidePageNumbersEl) hidePageNumbersEl.checked = hidePageNumbers;
-            }
-
-            enablePageFold = data.enablePageFold !== undefined ? data.enablePageFold : true;
-            const enablePageFoldEl = document.getElementById('enablePageFold');
-            if (enablePageFoldEl) enablePageFoldEl.checked = enablePageFold;
-
-            showHeaderWhenFoldOff = data.showHeaderWhenFoldOff || false;
-            const shEl = document.getElementById('showHeaderWhenFoldOff');
-            if (shEl) shEl.checked = showHeaderWhenFoldOff;
-
-            dividerStyle = data.dividerStyle || 'line';
-            dividerCustomText = data.dividerCustomText || '';
-            const dsEl = document.getElementById('dividerStyle');
-            const dcEl = document.getElementById('dividerCustomText');
-            if (dsEl) dsEl.value = dividerStyle;
-            if (dcEl) { dcEl.value = dividerCustomText; dcEl.style.display = dividerStyle === 'custom' ? 'block' : 'none'; }
-
-            if (data.profiles && data.profiles.length > 0) {
-                profiles = JSON.parse(JSON.stringify(data.profiles));
-                profiles = profiles.map(function (profile) {
-                    profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
-                    return profile;
-                });
-            } else {
-                if (data.userName || data.charName) {
-                    profiles = [
-                        {
-                            name: data.userName || 'User',
-                            imageUrl: data.userImageUrl || '',
-                            focusX: data.userFocusX !== undefined ? data.userFocusX : 50,
-                            focusY: data.userFocusY !== undefined ? data.userFocusY : 30,
-                            desc: data.userDesc || '',
-                            tag: data.userProfileTag || '',
-                            color: ''
-                        },
-                        {
-                            name: data.charName || 'Char',
-                            imageUrl: data.charImageUrl || '',
-                            focusX: data.charFocusX !== undefined ? data.charFocusX : 50,
-                            focusY: data.charFocusY !== undefined ? data.charFocusY : 30,
-                            desc: data.charDesc || '',
-                            tag: data.charProfileTag || '',
-                            color: ''
-                        }
-                    ];
-                } else {
-                    profiles = [];
-                }
-            }
-
-            const enableTags = document.getElementById('enableTags');
-            const tagsInputs = document.getElementById('tagsInputs');
-            if (tagsInputs && enableTags) {
-                tagsInputs.style.display = enableTags.checked ? 'block' : 'none';
-            }
-
-            updateTagsList();
-            updateReplacementsList();
-            updatePagesList();
-            updateCustomThemesList();
-            updateProfilesList();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            applyEditorDataToForm(data);
         } else {
             loadDefaultSettings();
         }
@@ -412,6 +171,7 @@ function loadDefaultSettings() {
 
 function collectEditorData(extraData) {
     return {
+        schemaVersion: EDITOR_DATA_SCHEMA_VERSION,
         editorTitle: editorTitle,
         useRoundedQuotes: getCheckedValue('useRoundedQuotes'),
         useTextIndent: getCheckedValue('useTextIndent'),
@@ -462,6 +222,288 @@ function collectEditorData(extraData) {
         dividerCustomText: dividerCustomText,
         ...(extraData || {})
     };
+}
+
+function cloneData(value) {
+    if (!value || typeof value !== 'object') return {};
+    try {
+        return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+        return {};
+    }
+}
+
+function normalizeCustomColors(customColors) {
+    const colors = customColors && typeof customColors === 'object' ? customColors : {};
+    return {
+        bg: colors.bg || '#ffffff',
+        text: colors.text || '#2c3e50',
+        em: colors.em || '#2d5af0',
+        header: colors.header || colors.line || colors.headerText || '#162a3e',
+        quote1Bg: colors.quote1Bg || '#f0f2f5',
+        quote1Text: colors.quote1Text || '#2c3e50',
+        quote2Bg: colors.quote2Bg || '#f0f2f5',
+        quote2Text: colors.quote2Text || '#162a3e',
+        tagText: colors.tagText || colors.text || '#6c8da8',
+        divider: colors.divider || colors.tagText || colors.text || '#c8d6e0'
+    };
+}
+
+function normalizeCustomThemes(value) {
+    const themes = Array.isArray(value) ? value : [];
+    return themes.map(function (theme) {
+        const normalized = Object.assign({}, theme);
+        const header = normalized.header || normalized.line || normalized.headerText || normalized.text || '#333333';
+        normalized.header = header;
+        normalized.headerText = normalized.headerText || header;
+        normalized.line = normalized.line || header;
+        normalized.tagText = normalized.tagText || normalized.text || '#888888';
+        normalized.divider = normalized.divider || normalized.tagText || normalized.text || '#cccccc';
+        return normalized;
+    });
+}
+
+function normalizePages(value) {
+    const sourcePages = Array.isArray(value) ? value : [];
+    return sourcePages.map(function (item) {
+        const page = Object.assign({}, item);
+        if (!page.itemType) page.itemType = 'page';
+        if (page.itemType === 'page') page.collapsed = false;
+        if (page.content) page.content = migrateLocalImagesInText(page.content);
+        if (page.image) page.image = migrateLocalImageValue(page.image);
+        if (page.bgImage) page.bgImage = migrateLocalImageValue(page.bgImage);
+        if (page.headerImage) page.headerImage = migrateLocalImageValue(page.headerImage);
+        if (page.itemType === 'page' && (page.imageWidth === undefined || page.imageWidth === null)) {
+            page.imageWidth = 100;
+        }
+        return page;
+    });
+}
+
+function normalizeTags(value) {
+    let normalizedTags;
+    if (Array.isArray(value) && value.length > 0) {
+        normalizedTags = JSON.parse(JSON.stringify(value));
+    } else {
+        normalizedTags = JSON.parse(JSON.stringify(DEFAULT_TAGS));
+    }
+    while (normalizedTags.length < DEFAULT_TAGS.length) {
+        normalizedTags.push(JSON.parse(JSON.stringify(DEFAULT_TAGS[normalizedTags.length])));
+    }
+    return normalizedTags;
+}
+
+function normalizeProfiles(data) {
+    if (data.profiles && data.profiles.length > 0) {
+        return JSON.parse(JSON.stringify(data.profiles)).map(function (profile) {
+            profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
+            return profile;
+        });
+    }
+    if (data.userName || data.charName) {
+        return [
+            {
+                name: data.userName || 'User',
+                imageUrl: migrateLocalImageValue(data.userImageUrl || ''),
+                focusX: data.userFocusX !== undefined ? data.userFocusX : 50,
+                focusY: data.userFocusY !== undefined ? data.userFocusY : 30,
+                desc: data.userDesc || '',
+                tag: data.userProfileTag || '',
+                color: ''
+            },
+            {
+                name: data.charName || 'Char',
+                imageUrl: migrateLocalImageValue(data.charImageUrl || ''),
+                focusX: data.charFocusX !== undefined ? data.charFocusX : 50,
+                focusY: data.charFocusY !== undefined ? data.charFocusY : 30,
+                desc: data.charDesc || '',
+                tag: data.charProfileTag || '',
+                color: ''
+            }
+        ];
+    }
+    return [];
+}
+
+function migrateEditorData(rawData, options) {
+    const data = cloneData(rawData);
+    const fallbackTitle = options && options.fallbackEditorTitle ? options.fallbackEditorTitle : '';
+
+    localImages = data.localImages && typeof data.localImages === 'object' ? data.localImages : {};
+
+    data.schemaVersion = EDITOR_DATA_SCHEMA_VERSION;
+    data.editorTitle = data.editorTitle || fallbackTitle || '';
+    editorTitle = data.editorTitle;
+    data.coverImage = migrateLocalImageValue(data.coverImage || '');
+    data.customColors = normalizeCustomColors(data.customColors);
+    data.pages = normalizePages(data.pages);
+    data.tags = normalizeTags(data.tags);
+    data.replacements = Array.isArray(data.replacements) ? data.replacements : [];
+    data.customThemes = normalizeCustomThemes(data.customThemes);
+    data.profiles = normalizeProfiles(data);
+    data.localImages = localImages;
+
+    if (!data.textSpacing) data.textSpacing = {};
+    if (!data.headingFontSizes) data.headingFontSizes = {};
+    if (!data.globalTheme) data.globalTheme = 'basic';
+    if (data.enablePageFold === undefined) data.enablePageFold = true;
+    if (data.showHeaderWhenFoldOff === undefined) data.showHeaderWhenFoldOff = false;
+    if (!data.dividerStyle) data.dividerStyle = 'line';
+    if (data.dividerCustomText === undefined) data.dividerCustomText = '';
+
+    return data;
+}
+
+function syncTextSpacingControls() {
+    const controls = {
+        textSize: { input: 'textSizeInput', slider: 'textSizeSlider', display: 'textSizeDisplay', value: textSpacing.fontSize, suffix: 'px', format: function (v) { return v.toFixed(1); } },
+        lineHeight: { input: 'lineHeightInput', slider: 'lineHeightSlider', display: 'lineHeightDisplay', value: textSpacing.lineHeight, suffix: '', format: function (v) { return v.toFixed(2); } },
+        letterSpacing: { input: 'letterSpacingInput', slider: 'letterSpacingSlider', display: 'letterSpacingDisplay', value: textSpacing.letterSpacing, suffix: 'px', format: function (v) { return v.toFixed(1); } },
+        paragraphSpacing: { input: 'paragraphSpacingInput', slider: 'paragraphSpacingSlider', display: 'paragraphSpacingDisplay', value: textSpacing.paragraphSpacing, suffix: 'px', format: function (v) { return String(v); } },
+        textIndent: { input: 'textIndentInput', slider: 'textIndentSlider', display: 'textIndentDisplay', value: textSpacing.textIndent, suffix: 'px', format: function (v) { return String(v); } }
+    };
+
+    Object.keys(controls).forEach(function (key) {
+        const item = controls[key];
+        const input = document.getElementById(item.input);
+        const slider = document.getElementById(item.slider);
+        const display = document.getElementById(item.display);
+        if (input) input.value = item.value;
+        if (slider) slider.value = item.value;
+        if (display) display.textContent = item.format(item.value) + item.suffix;
+    });
+}
+
+function syncHeadingFontSizeControls() {
+    const map = {
+        coverArchiveNo:  { slider: 'coverArchiveNoSizeSlider',  input: 'coverArchiveNoSizeInput',  display: 'coverArchiveNoSizeDisplay' },
+        coverTitle:      { slider: 'coverTitleSizeSlider',      input: 'coverTitleSizeInput',      display: 'coverTitleSizeDisplay' },
+        coverSubtitle:   { slider: 'coverSubtitleSizeSlider',   input: 'coverSubtitleSizeInput',   display: 'coverSubtitleSizeDisplay' },
+        coverTag:        { slider: 'coverTagSizeSlider',        input: 'coverTagSizeInput',        display: 'coverTagSizeDisplay' },
+        sectionTitle:    { slider: 'sectionTitleSizeSlider',    input: 'sectionTitleSizeInput',    display: 'sectionTitleSizeDisplay' },
+        sectionSubtitle: { slider: 'sectionSubtitleSizeSlider', input: 'sectionSubtitleSizeInput', display: 'sectionSubtitleSizeDisplay' },
+        pageHeaderNum:   { slider: 'pageHeaderNumSizeSlider',   input: 'pageHeaderNumSizeInput',   display: 'pageHeaderNumSizeDisplay' },
+        pageHeaderTitle: { slider: 'pageHeaderTitleSizeSlider', input: 'pageHeaderTitleSizeInput', display: 'pageHeaderTitleSizeDisplay' }
+    };
+
+    Object.keys(headingFontSizes).forEach(function (key) {
+        if (!map[key]) return;
+        const slider = document.getElementById(map[key].slider);
+        const input = document.getElementById(map[key].input);
+        const display = document.getElementById(map[key].display);
+        if (slider) slider.value = headingFontSizes[key];
+        if (input) input.value = headingFontSizes[key];
+        if (display) display.textContent = headingFontSizes[key] + 'px';
+    });
+}
+
+function applyEditorDataToForm(data) {
+    editorTitle = data.editorTitle || '';
+    localImages = data.localImages || {};
+
+    const useRoundedQuotes = document.getElementById('useRoundedQuotes');
+    const useTextIndent = document.getElementById('useTextIndent');
+    const preserveLineBreaks = document.getElementById('preserveLineBreaks');
+    const coverImage = document.getElementById('coverImage');
+    const coverZoom = document.getElementById('coverZoom');
+    const coverFocusX = document.getElementById('coverFocusX');
+    const coverFocusY = document.getElementById('coverFocusY');
+    const coverAutoFit = document.getElementById('coverAutoFit');
+    const coverArchiveNo = document.getElementById('coverArchiveNo');
+    const coverTitle = document.getElementById('coverTitle');
+    const coverSubtitle = document.getElementById('coverSubtitle');
+    const coverManualControls = document.getElementById('coverManualControls');
+    const coverZoomValue = document.getElementById('coverZoomValue');
+    const coverFocusXValue = document.getElementById('coverFocusXValue');
+    const coverFocusYValue = document.getElementById('coverFocusYValue');
+    const summaryText = document.getElementById('summaryText');
+    const enableCommentEl = document.getElementById('enableComment');
+    const commentText = document.getElementById('commentText');
+    const commentNickname = document.getElementById('commentNickname');
+    const commentContent = document.getElementById('commentContent');
+    const enableTagsEl = document.getElementById('enableTags');
+    const tagsInputs = document.getElementById('tagsInputs');
+
+    if (useRoundedQuotes) useRoundedQuotes.checked = data.useRoundedQuotes || false;
+    if (useTextIndent) useTextIndent.checked = data.useTextIndent || false;
+    if (preserveLineBreaks) preserveLineBreaks.checked = data.preserveLineBreaks || false;
+
+    if (coverImage) coverImage.value = data.coverImage || '';
+    if (coverAutoFit) coverAutoFit.checked = data.coverAutoFit || false;
+    if (coverZoom) coverZoom.value = data.coverZoom || 120;
+    if (coverFocusX) coverFocusX.value = data.coverFocusX || 50;
+    if (coverFocusY) coverFocusY.value = data.coverFocusY || 28;
+    if (coverArchiveNo) coverArchiveNo.value = data.coverArchiveNo || 'ARCHIVE NO.001';
+    if (coverTitle) coverTitle.value = data.coverTitle || '';
+    if (coverSubtitle) coverSubtitle.value = data.coverSubtitle || '';
+    if (coverManualControls) coverManualControls.style.display = data.coverAutoFit ? 'none' : 'block';
+    if (coverZoomValue) coverZoomValue.textContent = (data.coverZoom || 120) + '%';
+    if (coverFocusXValue) coverFocusXValue.textContent = (data.coverFocusX || 50) + '%';
+    if (coverFocusYValue) coverFocusYValue.textContent = (data.coverFocusY || 28) + '%';
+
+    if (summaryText) summaryText.value = data.summaryText || '';
+    if (enableCommentEl) enableCommentEl.checked = data.enableComment || false;
+    if (commentText) commentText.value = data.commentText || '';
+    if (commentNickname) commentNickname.value = data.commentNickname || '';
+    if (commentContent) commentContent.style.display = data.enableComment ? 'block' : 'none';
+    if (enableTagsEl) enableTagsEl.checked = data.enableTags !== undefined ? data.enableTags : true;
+    if (tagsInputs && enableTagsEl) tagsInputs.style.display = enableTagsEl.checked ? 'block' : 'none';
+
+    if (data.customColors) {
+        setColorInputValue('customBg', data.customColors.bg);
+        setColorInputValue('customText', data.customColors.text);
+        setColorInputValue('customEm', data.customColors.em);
+        setColorInputValue('customHeader', data.customColors.header);
+        setColorInputValue('customQuote1Bg', data.customColors.quote1Bg);
+        setColorInputValue('customQuote1Text', data.customColors.quote1Text);
+        setColorInputValue('customQuote2Bg', data.customColors.quote2Bg);
+        setColorInputValue('customQuote2Text', data.customColors.quote2Text);
+        setColorInputValue('customTagText', data.customColors.tagText);
+        setColorInputValue('customDivider', data.customColors.divider);
+    }
+
+    pages = data.pages || [];
+    tags = data.tags || JSON.parse(JSON.stringify(DEFAULT_TAGS));
+    replacements = data.replacements || [];
+    customThemes = data.customThemes || [];
+    profiles = data.profiles || [];
+    textSpacing = { ...textSpacing, ...(data.textSpacing || {}) };
+    headingFontSizes = { ...headingFontSizes, ...(data.headingFontSizes || {}) };
+    fontFamily = data.fontFamily || fontFamily;
+    globalTheme = data.globalTheme || 'basic';
+    hidePageNumbers = data.hidePageNumbers || false;
+    enablePageFold = data.enablePageFold !== undefined ? data.enablePageFold : true;
+    showHeaderWhenFoldOff = data.showHeaderWhenFoldOff || false;
+    dividerStyle = data.dividerStyle || 'line';
+    dividerCustomText = data.dividerCustomText || '';
+
+    const fontFamilyEl = document.getElementById('fontFamily');
+    const globalThemeEl = document.getElementById('globalTheme');
+    const hidePageNumbersEl = document.getElementById('hidePageNumbers');
+    const enablePageFoldEl = document.getElementById('enablePageFold');
+    const showHeaderWhenFoldOffEl = document.getElementById('showHeaderWhenFoldOff');
+    const dividerStyleEl = document.getElementById('dividerStyle');
+    const dividerCustomTextEl = document.getElementById('dividerCustomText');
+
+    if (fontFamilyEl) fontFamilyEl.value = fontFamily;
+    if (globalThemeEl) globalThemeEl.value = globalTheme;
+    if (hidePageNumbersEl) hidePageNumbersEl.checked = hidePageNumbers;
+    if (enablePageFoldEl) enablePageFoldEl.checked = enablePageFold;
+    if (showHeaderWhenFoldOffEl) showHeaderWhenFoldOffEl.checked = showHeaderWhenFoldOff;
+    if (dividerStyleEl) dividerStyleEl.value = dividerStyle;
+    if (dividerCustomTextEl) {
+        dividerCustomTextEl.value = dividerCustomText;
+        dividerCustomTextEl.style.display = dividerStyle === 'custom' ? 'block' : 'none';
+    }
+
+    syncTextSpacingControls();
+    syncHeadingFontSizeControls();
+
+    updateTagsList();
+    updateReplacementsList();
+    updatePagesList();
+    updateCustomThemesList();
+    updateProfilesList();
 }
 
 function getEditingChapterTitle() {
@@ -705,7 +747,7 @@ function exportDataToJSON() {
         const data = collectEditorData({
             presets: presets,
             exportDate: new Date().toISOString(),
-            version: '1.0'
+            schemaVersion: EDITOR_DATA_SCHEMA_VERSION
         });
 
         const jsonStr = JSON.stringify(data, null, 2);
@@ -740,7 +782,7 @@ function importDataFromJSON(file) {
 
     reader.onload = function (e) {
         try {
-            const data = JSON.parse(e.target.result);
+            let data = JSON.parse(e.target.result);
 
             if (!data || typeof data !== 'object') {
                 throw new Error('유효하지 않은 데이터 형식입니다.');
@@ -748,166 +790,14 @@ function importDataFromJSON(file) {
 
             if (!confirm('현재 작업 중인 데이터가 모두 사라집니다. 불러오시겠습니까?')) return;
 
-            editorTitle = data.editorTitle || '';
-
-            if (data.useRoundedQuotes !== undefined) document.getElementById('useRoundedQuotes').checked = data.useRoundedQuotes;
-            if (data.useTextIndent !== undefined) document.getElementById('useTextIndent').checked = data.useTextIndent;
-            if (data.preserveLineBreaks !== undefined) document.getElementById('preserveLineBreaks').checked = data.preserveLineBreaks;
-            if (data.coverImage !== undefined) document.getElementById('coverImage').value = data.coverImage;
-            if (data.coverAutoFit !== undefined) {
-                document.getElementById('coverAutoFit').checked = data.coverAutoFit;
-                const coverManualControls = document.getElementById('coverManualControls');
-                if (coverManualControls) coverManualControls.style.display = data.coverAutoFit ? 'none' : 'block';
-            }
-            if (data.coverZoom !== undefined) {
-                document.getElementById('coverZoom').value = data.coverZoom;
-                document.getElementById('coverZoomValue').textContent = data.coverZoom + '%';
-            }
-            if (data.coverFocusX !== undefined) {
-                document.getElementById('coverFocusX').value = data.coverFocusX;
-                document.getElementById('coverFocusXValue').textContent = data.coverFocusX + '%';
-            }
-            if (data.coverFocusY !== undefined) {
-                document.getElementById('coverFocusY').value = data.coverFocusY;
-                document.getElementById('coverFocusYValue').textContent = data.coverFocusY + '%';
-            }
-            if (data.coverArchiveNo !== undefined) document.getElementById('coverArchiveNo').value = data.coverArchiveNo;
-            if (data.coverTitle !== undefined) document.getElementById('coverTitle').value = data.coverTitle;
-            if (data.coverSubtitle !== undefined) document.getElementById('coverSubtitle').value = data.coverSubtitle;
-            if (data.summaryText !== undefined) document.getElementById('summaryText').value = data.summaryText;
-            if (data.enableComment !== undefined) {
-                document.getElementById('enableComment').checked = data.enableComment;
-                document.getElementById('commentContent').style.display = data.enableComment ? 'block' : 'none';
-            }
-            if (data.commentText !== undefined) document.getElementById('commentText').value = data.commentText;
-            if (data.commentNickname !== undefined) document.getElementById('commentNickname').value = data.commentNickname;
-            if (data.enableTags !== undefined) {
-                document.getElementById('enableTags').checked = data.enableTags;
-                document.getElementById('tagsInputs').style.display = data.enableTags ? 'block' : 'none';
-            }
-
-            if (data.customColors) {
-                setColorInputValue('customBg', data.customColors.bg);
-                setColorInputValue('customText', data.customColors.text);
-                setColorInputValue('customEm', data.customColors.em);
-                setColorInputValue('customHeader', data.customColors.header);
-                setColorInputValue('customQuote1Bg', data.customColors.quote1Bg);
-                setColorInputValue('customQuote1Text', data.customColors.quote1Text);
-                setColorInputValue('customQuote2Bg', data.customColors.quote2Bg);
-                setColorInputValue('customQuote2Text', data.customColors.quote2Text);
-                setColorInputValue('customTagText', data.customColors.tagText);
-                setColorInputValue('customDivider', data.customColors.divider);
-            }
-
-            localImages = data.localImages || {};
-
-            if (data.pages) {
-                pages = data.pages.map(function (item) {
-                    if (item.content) item.content = migrateLocalImagesInText(item.content);
-                    if (item.image) item.image = migrateLocalImageValue(item.image);
-                    if (item.bgImage) item.bgImage = migrateLocalImageValue(item.bgImage);
-                    if (item.headerImage) item.headerImage = migrateLocalImageValue(item.headerImage);
-                    return item;
-                });
-            }
-            if (data.tags) tags = data.tags;
-            if (data.replacements) replacements = data.replacements;
-            if (data.customThemes) customThemes = data.customThemes;
-            if (data.profiles) {
-                profiles = data.profiles.map(function (profile) {
-                    profile.imageUrl = migrateLocalImageValue(profile.imageUrl);
-                    return profile;
-                });
-            }
-
-            if (data.textSpacing) {
-                textSpacing = { ...textSpacing, ...data.textSpacing };
-                const textSizeInput = document.getElementById('textSizeInput');
-                const textSizeSlider = document.getElementById('textSizeSlider');
-                const lineHeightInput = document.getElementById('lineHeightInput');
-                const lineHeightSlider = document.getElementById('lineHeightSlider');
-                const letterSpacingInput = document.getElementById('letterSpacingInput');
-                const letterSpacingSlider = document.getElementById('letterSpacingSlider');
-                const paragraphSpacingInput = document.getElementById('paragraphSpacingInput');
-                const paragraphSpacingSlider = document.getElementById('paragraphSpacingSlider');
-                const textIndentInput = document.getElementById('textIndentInput');
-                const textIndentSlider = document.getElementById('textIndentSlider');
-
-                if (textSizeInput) textSizeInput.value = textSpacing.fontSize;
-                if (textSizeSlider) textSizeSlider.value = textSpacing.fontSize;
-                if (lineHeightInput) lineHeightInput.value = textSpacing.lineHeight;
-                if (lineHeightSlider) lineHeightSlider.value = textSpacing.lineHeight;
-                if (letterSpacingInput) letterSpacingInput.value = textSpacing.letterSpacing;
-                if (letterSpacingSlider) letterSpacingSlider.value = textSpacing.letterSpacing;
-                if (paragraphSpacingInput) paragraphSpacingInput.value = textSpacing.paragraphSpacing;
-                if (paragraphSpacingSlider) paragraphSpacingSlider.value = textSpacing.paragraphSpacing;
-                if (textIndentInput) textIndentInput.value = textSpacing.textIndent;
-                if (textIndentSlider) textIndentSlider.value = textSpacing.textIndent;
-            }
-
-            if (data.fontFamily) {
-                fontFamily = data.fontFamily;
-                document.getElementById('fontFamily').value = fontFamily;
-            }
-
-            if (data.headingFontSizes) {
-                headingFontSizes = { ...headingFontSizes, ...data.headingFontSizes };
-                const _hmap = {
-                    coverArchiveNo:  { slider: 'coverArchiveNoSizeSlider',  input: 'coverArchiveNoSizeInput',  display: 'coverArchiveNoSizeDisplay' },
-                    coverTitle:      { slider: 'coverTitleSizeSlider',      input: 'coverTitleSizeInput',      display: 'coverTitleSizeDisplay' },
-                    coverSubtitle:   { slider: 'coverSubtitleSizeSlider',   input: 'coverSubtitleSizeInput',   display: 'coverSubtitleSizeDisplay' },
-                    coverTag:        { slider: 'coverTagSizeSlider',        input: 'coverTagSizeInput',        display: 'coverTagSizeDisplay' },
-                    sectionTitle:    { slider: 'sectionTitleSizeSlider',    input: 'sectionTitleSizeInput',    display: 'sectionTitleSizeDisplay' },
-                    sectionSubtitle: { slider: 'sectionSubtitleSizeSlider', input: 'sectionSubtitleSizeInput', display: 'sectionSubtitleSizeDisplay' },
-                    pageHeaderNum:   { slider: 'pageHeaderNumSizeSlider',   input: 'pageHeaderNumSizeInput',   display: 'pageHeaderNumSizeDisplay' },
-                    pageHeaderTitle: { slider: 'pageHeaderTitleSizeSlider', input: 'pageHeaderTitleSizeInput', display: 'pageHeaderTitleSizeDisplay' },
-                };
-                Object.keys(headingFontSizes).forEach(k => {
-                    if (!_hmap[k]) return;
-                    const sl = document.getElementById(_hmap[k].slider);
-                    const inp = document.getElementById(_hmap[k].input);
-                    const dsp = document.getElementById(_hmap[k].display);
-                    if (sl) sl.value = headingFontSizes[k];
-                    if (inp) inp.value = headingFontSizes[k];
-                    if (dsp) dsp.textContent = headingFontSizes[k] + 'px';
-                });
-            }
-
-            if (data.globalTheme) {
-                globalTheme = data.globalTheme;
-                document.getElementById('globalTheme').value = globalTheme;
-            }
-
-            if (data.hidePageNumbers !== undefined) {
-                hidePageNumbers = data.hidePageNumbers;
-                document.getElementById('hidePageNumbers').checked = hidePageNumbers;
-            }
-
-            enablePageFold = data.enablePageFold !== undefined ? data.enablePageFold : true;
-            const importEnablePageFoldEl = document.getElementById('enablePageFold');
-            if (importEnablePageFoldEl) importEnablePageFoldEl.checked = enablePageFold;
-
-            showHeaderWhenFoldOff = data.showHeaderWhenFoldOff || false;
-            const importShEl = document.getElementById('showHeaderWhenFoldOff');
-            if (importShEl) importShEl.checked = showHeaderWhenFoldOff;
-
-            dividerStyle = data.dividerStyle || 'line';
-            dividerCustomText = data.dividerCustomText || '';
-            const importDsEl = document.getElementById('dividerStyle');
-            const importDcEl = document.getElementById('dividerCustomText');
-            if (importDsEl) importDsEl.value = dividerStyle;
-            if (importDcEl) { importDcEl.value = dividerCustomText; importDcEl.style.display = dividerStyle === 'custom' ? 'block' : 'none'; }
+            data = migrateEditorData(data);
+            applyEditorDataToForm(data);
 
             if (data.presets && typeof data.presets === 'object') {
                 localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(data.presets));
                 loadPresets();
             }
 
-            updateTagsList();
-            updateReplacementsList();
-            updatePagesList();
-            updateCustomThemesList();
-            updateProfilesList();
             updatePreview();
             saveToStorage();
 
