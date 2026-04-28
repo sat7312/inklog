@@ -1,3 +1,5 @@
+const collapsedProfiles = new Set();
+
 function updateProfilesList() {
     const profilesList = document.getElementById('profilesList');
     if (!profilesList) return;
@@ -7,6 +9,8 @@ function updateProfilesList() {
     profiles.forEach(function (profile, index) {
         const profileSection = document.createElement('div');
         profileSection.className = 'profile-section';
+        if (collapsedProfiles.has(profile)) profileSection.classList.add('collapsed');
+        profileSection.dataset.index = index;
 
         const focusXId = 'profile' + index + 'FocusX';
         const focusYId = 'profile' + index + 'FocusY';
@@ -21,7 +25,7 @@ function updateProfilesList() {
         const profileColor = /^#[0-9A-Fa-f]{6}$/.test(profile.color || '') ? profile.color : '#5a9ace';
 
         profileSection.innerHTML =
-            '<div class="profile-header">' +
+            '<div class="profile-header profile-drag-handle" draggable="true" data-index="' + index + '">' +
             '<div class="profile-title-group profile-header-toggle" data-index="' + index + '" style="cursor:pointer;">' +
             '<span class="profile-title" id="profileTitle' + index + '">' + profileTitle + '</span>' +
             '</div>' +
@@ -91,13 +95,22 @@ function updateProfilesList() {
     });
 
     attachProfileEvents(profilesList);
+    setupProfilesDragSort(profilesList);
 }
 
 function attachProfileEvents(profilesList) {
     profilesList.querySelectorAll('.profile-header-toggle').forEach(el => {
         el.addEventListener('click', function () {
+            const handle = this.closest('.profile-drag-handle');
+            if (handle && handle.dataset.suppressClick === 'true') return;
             const section = this.closest('.profile-section');
             section.classList.toggle('collapsed');
+            const idx = parseInt(this.dataset.index);
+            if (section.classList.contains('collapsed')) {
+                collapsedProfiles.add(profiles[idx]);
+            } else {
+                collapsedProfiles.delete(profiles[idx]);
+            }
         });
     });
 
@@ -233,6 +246,97 @@ function attachProfileEvents(profilesList) {
                 updateProfilesList(); updatePreview(); saveToStorage();
             }
         });
+    });
+}
+
+function moveProfileToIndex(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    if (fromIndex < 0 || fromIndex >= profiles.length || toIndex < 0 || toIndex > profiles.length - 1) return;
+
+    const item = profiles.splice(fromIndex, 1)[0];
+    profiles.splice(toIndex, 0, item);
+    updateProfilesList();
+    updatePreview();
+    saveToStorage();
+}
+
+function setupProfilesDragSort(profilesList) {
+    let draggedIndex = null;
+    const placeholder = document.createElement('div');
+    placeholder.className = 'drag-placeholder';
+
+    function getDropIndex() {
+        let index = 0;
+        const children = Array.from(profilesList.children);
+        for (let i = 0; i < children.length; i++) {
+            if (children[i] === placeholder) return index;
+            if (children[i].classList.contains('profile-section') && !children[i].classList.contains('dragging')) {
+                index++;
+            }
+        }
+        return index;
+    }
+
+    function movePlaceholder(target, clientY) {
+        const rect = target.getBoundingClientRect();
+        const insertAfter = clientY > rect.top + rect.height / 2;
+        if (insertAfter) {
+            target.after(placeholder);
+        } else {
+            target.before(placeholder);
+        }
+    }
+
+    function removePlaceholder() {
+        if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    }
+
+    profilesList.querySelectorAll('.profile-drag-handle').forEach(function (handle) {
+        handle.addEventListener('dragstart', function (e) {
+            if (e.target.closest('button')) {
+                e.preventDefault();
+                return;
+            }
+            const section = handle.closest('.profile-section');
+            draggedIndex = parseInt(handle.dataset.index);
+            handle.dataset.suppressClick = 'true';
+            if (section) section.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(draggedIndex));
+        });
+
+        handle.addEventListener('dragend', function () {
+            draggedIndex = null;
+            profilesList.querySelectorAll('.profile-section').forEach(function (section) {
+                section.classList.remove('dragging');
+            });
+            removePlaceholder();
+            setTimeout(function () {
+                delete handle.dataset.suppressClick;
+            }, 0);
+        });
+    });
+
+    profilesList.querySelectorAll('.profile-section').forEach(function (section) {
+        section.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            if (draggedIndex === null || draggedIndex === parseInt(section.dataset.index)) return;
+            movePlaceholder(section, e.clientY);
+        });
+    });
+
+    profilesList.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (draggedIndex === null || placeholder.parentNode) return;
+        profilesList.appendChild(placeholder);
+    });
+
+    profilesList.addEventListener('drop', function (e) {
+        e.preventDefault();
+        if (draggedIndex === null || !placeholder.parentNode) return;
+        const dropIndex = getDropIndex();
+        removePlaceholder();
+        moveProfileToIndex(draggedIndex, dropIndex);
     });
 }
 

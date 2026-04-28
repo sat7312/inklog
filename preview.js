@@ -19,6 +19,22 @@ function updatePanelTitle() {
     document.title = title ? title + ' - InkLog' : 'InkLog';
 }
 
+function getPreviewDetailsOpenStates() {
+    const preview = document.getElementById('preview');
+    if (!preview) return [];
+    return Array.from(preview.querySelectorAll('details')).map(function (details) {
+        return details.open;
+    });
+}
+
+function restorePreviewDetailsOpenStates(openStates) {
+    const preview = document.getElementById('preview');
+    if (!preview || !openStates || openStates.length === 0) return;
+    Array.from(preview.querySelectorAll('details')).forEach(function (details, index) {
+        if (openStates[index] !== undefined) details.open = openStates[index];
+    });
+}
+
 function updatePreview() {
     updatePanelTitle();
     const activeTab = document.querySelector('.tab-content.active');
@@ -26,6 +42,8 @@ function updatePreview() {
     if (activeTab && activeTab.id === 'tab-description') {
         preview.innerHTML = generateIntroHTML(collectEditorData());
     } else if (activeTab && activeTab.id === 'tab-pages') {
+        const shouldRestoreFoldState = transientExpandedPageIndexes.length === 0;
+        const openStates = shouldRestoreFoldState ? getPreviewDetailsOpenStates() : [];
         const ctx = Object.assign({}, collectEditorData(), {
             enableTopSection: false,
             enableComment: false,
@@ -33,9 +51,12 @@ function updatePreview() {
             forceOpenPageIndexes: transientExpandedPageIndexes
         });
         preview.innerHTML = generateHTML(ctx, true);
+        if (shouldRestoreFoldState) restorePreviewDetailsOpenStates(openStates);
         transientExpandedPageIndexes = [];
     } else {
+        const openStates = getPreviewDetailsOpenStates();
         preview.innerHTML = generateHTML(getPreviewData(), true);
+        restorePreviewDetailsOpenStates(openStates);
     }
 }
 

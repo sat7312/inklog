@@ -303,6 +303,96 @@ function updateTotalStats() {
     }
 }
 
+function movePageToIndex(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    if (fromIndex < 0 || fromIndex >= pages.length || toIndex < 0 || toIndex > pages.length - 1) return;
+
+    const item = pages.splice(fromIndex, 1)[0];
+    pages.splice(toIndex, 0, item);
+    updatePagesList();
+    updatePreview();
+    saveToStorage();
+}
+
+function setupPagesDragSort(pagesList) {
+    let draggedIndex = null;
+    const placeholder = document.createElement('div');
+    placeholder.className = 'drag-placeholder';
+
+    function getDropIndex() {
+        let index = 0;
+        const children = Array.from(pagesList.children);
+        for (let i = 0; i < children.length; i++) {
+            if (children[i] === placeholder) return index;
+            if (children[i].classList.contains('page-item') && !children[i].classList.contains('dragging')) {
+                index++;
+            }
+        }
+        return index;
+    }
+
+    function movePlaceholder(target, clientY) {
+        const rect = target.getBoundingClientRect();
+        const insertAfter = clientY > rect.top + rect.height / 2;
+        if (insertAfter) {
+            target.after(placeholder);
+        } else {
+            target.before(placeholder);
+        }
+    }
+
+    function removePlaceholder() {
+        if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    }
+
+    pagesList.querySelectorAll('.page-item').forEach(function (item) {
+        item.draggable = true;
+
+        item.addEventListener('dragstart', function (e) {
+            if (e.target.closest('.btn-move') || e.target.closest('.btn-delete-page')) {
+                e.preventDefault();
+                return;
+            }
+            draggedIndex = parseInt(item.dataset.index);
+            item.dataset.suppressClick = 'true';
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(draggedIndex));
+        });
+
+        item.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            if (draggedIndex === null || draggedIndex === parseInt(item.dataset.index)) return;
+            movePlaceholder(item, e.clientY);
+        });
+
+        item.addEventListener('dragend', function () {
+            draggedIndex = null;
+            pagesList.querySelectorAll('.page-item').forEach(function (el) {
+                el.classList.remove('dragging');
+            });
+            removePlaceholder();
+            setTimeout(function () {
+                delete item.dataset.suppressClick;
+            }, 0);
+        });
+    });
+
+    pagesList.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (draggedIndex === null || placeholder.parentNode) return;
+        pagesList.appendChild(placeholder);
+    });
+
+    pagesList.addEventListener('drop', function (e) {
+        e.preventDefault();
+        if (draggedIndex === null || !placeholder.parentNode) return;
+        const dropIndex = getDropIndex();
+        removePlaceholder();
+        movePageToIndex(draggedIndex, dropIndex);
+    });
+}
+
 function updatePagesList() {
     const pagesList = document.getElementById('pagesList');
     pagesList.innerHTML = '';
@@ -312,6 +402,7 @@ function updatePagesList() {
     pages.forEach(function (item, index) {
         const pageItem = document.createElement('div');
         pageItem.className = 'page-item';
+        pageItem.dataset.index = index;
 
         if (item.itemType === 'section') {
             let sectionDisplay = item.title || 'Section';
@@ -334,6 +425,7 @@ function updatePagesList() {
                 '</div>';
 
             pageItem.addEventListener('click', function (e) {
+                if (pageItem.dataset.suppressClick === 'true') return;
                 if (e.target.closest('.btn-move') || e.target.closest('.btn-delete-page')) return;
 
                 currentEditingIndex = index;
@@ -384,6 +476,7 @@ function updatePagesList() {
                 '</div>';
 
             pageItem.addEventListener('click', function (e) {
+                if (pageItem.dataset.suppressClick === 'true') return;
                 if (e.target.closest('.btn-move') || e.target.closest('.btn-delete-page')) return;
 
                 currentEditingIndex = index;
@@ -405,6 +498,8 @@ function updatePagesList() {
 
         pagesList.appendChild(pageItem);
     });
+
+    setupPagesDragSort(pagesList);
 
     document.querySelectorAll('.btn-move-up').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
