@@ -94,12 +94,8 @@ function setupEventListeners() {
             }
             event.preventDefault();
             event.stopPropagation();
-            openQuoteCharacterMenu(
-                quote,
-                parseInt(quote.dataset.pageIndex, 10),
-                parseInt(quote.dataset.lineIndex, 10),
-                quote.dataset.quoteSource || ''
-            );
+            toggleSelectedQuoteTarget(quote);
+            openQuoteCharacterMenu(quote);
         });
     }
 

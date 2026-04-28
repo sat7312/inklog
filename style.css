@@ -1109,6 +1109,11 @@ button {
     cursor: pointer;
 }
 
+.js-quote-assign.selected-quote {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
 .quote-character-menu {
     position: absolute;
     z-index: 2000;
@@ -1118,6 +1123,15 @@ button {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.quote-character-status {
+    padding: 6px 8px 8px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
 }
 
 .quote-character-option {
