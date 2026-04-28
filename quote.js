@@ -53,6 +53,50 @@ function hasSelectedQuoteTargets() {
     return selectedQuoteTargets.length > 0;
 }
 
+function getQuoteAssignedProfileIndex(target) {
+    const pageIndex = target.pageIndex;
+    if (pageIndex < 0 || pageIndex >= pages.length || !pages[pageIndex]) return null;
+
+    const lines = String(pages[pageIndex].content || '').split('\n');
+    const line = target.lineIndex >= 0 && target.lineIndex < lines.length
+        ? lines[target.lineIndex]
+        : pages[pageIndex].content || '';
+    const charWrapped = new RegExp('\\[CHAR:(\\d+)\\]' + escapeRegExp(target.quoteSource) + '\\[\\/CHAR\\]');
+    const match = String(line).match(charWrapped);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+function getQuoteAssignmentSummary(targets) {
+    const assignedIndexes = targets.map(getQuoteAssignedProfileIndex);
+    const assignedOnly = assignedIndexes.filter(function (index) {
+        return index !== null && !Number.isNaN(index);
+    });
+
+    if (assignedOnly.length === 0) {
+        return { text: '현재: 미지정', color: '' };
+    }
+
+    const firstIndex = assignedOnly[0];
+    const allSame = assignedOnly.length === targets.length && assignedOnly.every(function (index) {
+        return index === firstIndex;
+    });
+    const profile = profiles[firstIndex] || {};
+    const profileName = profile.name || profile.tag || ('Profile ' + (firstIndex + 1));
+
+    if (allSame) {
+        return {
+            text: '현재: ' + profileName + (targets.length > 1 ? ' · ' + targets.length + '개' : ''),
+            color: profile.color || '#5a9ace'
+        };
+    }
+
+    if (assignedOnly.length < targets.length) {
+        return { text: '현재: 일부 지정됨 · ' + assignedOnly.length + '/' + targets.length + '개', color: '' };
+    }
+
+    return { text: '현재: 여러 인물 혼합', color: '' };
+}
+
 function replaceQuoteWithCharacter(content, lineIndex, quoteSource, profileIndex) {
     if (!quoteSource) return content;
     const replacement = '[CHAR:' + profileIndex + ']' + quoteSource + '[/CHAR]';
@@ -223,6 +267,14 @@ function openQuoteCharacterMenu(target) {
     status.className = 'quote-character-status';
     status.textContent = selectedCount + '개 대사 선택됨';
     menu.appendChild(status);
+
+    const assignmentSummary = getQuoteAssignmentSummary(selectedQuoteTargets);
+    const current = document.createElement('div');
+    current.className = 'quote-character-current';
+    current.innerHTML = assignmentSummary.color
+        ? '<span class="quote-character-swatch" style="background:' + assignmentSummary.color + ';"></span><span>' + escapeHtml(assignmentSummary.text) + '</span>'
+        : '<span>' + escapeHtml(assignmentSummary.text) + '</span>';
+    menu.appendChild(current);
 
     profiles.forEach(function (profile, index) {
         if (!profile.name && !profile.tag) return;

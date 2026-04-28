@@ -1142,9 +1142,19 @@ button {
 
 .quote-character-status {
     padding: 6px 8px 8px;
-    border-bottom: 1px solid var(--border-color);
     color: var(--text-muted);
     font-size: 11px;
+    font-weight: 600;
+}
+
+.quote-character-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 8px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 12px;
     font-weight: 600;
     margin-bottom: 4px;
 }
