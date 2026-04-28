@@ -94,7 +94,11 @@ function setupEventListeners() {
             event.preventDefault();
             event.stopPropagation();
             toggleSelectedQuoteTarget(quote);
-            openQuoteCharacterMenu(quote);
+            if (hasSelectedQuoteTargets()) {
+                openQuoteCharacterMenu(quote);
+            } else {
+                removeQuoteCharacterMenuOnly();
+            }
         });
     }
 

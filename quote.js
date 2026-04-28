@@ -46,10 +46,11 @@ function toggleSelectedQuoteTarget(element) {
         selectedQuoteTargets.push(target);
     }
 
-    if (selectedQuoteTargets.length === 0) {
-        selectedQuoteTargets.push(target);
-    }
     syncQuoteSelectionStyles();
+}
+
+function hasSelectedQuoteTargets() {
+    return selectedQuoteTargets.length > 0;
 }
 
 function replaceQuoteWithCharacter(content, lineIndex, quoteSource, profileIndex) {
@@ -216,7 +217,7 @@ function openQuoteCharacterMenu(target) {
     const menu = document.createElement('div');
     menu.id = 'quoteCharacterMenu';
     menu.className = 'quote-character-menu';
-    const selectedCount = selectedQuoteTargets.length || 1;
+    const selectedCount = selectedQuoteTargets.length;
 
     const status = document.createElement('div');
     status.className = 'quote-character-status';
