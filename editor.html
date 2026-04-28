@@ -25,7 +25,7 @@
                         <line x1="3" y1="9" x2="21" y2="9" />
                         <path d="M9 21V9" />
                     </svg>
-                    <span>Description</span>
+                    <span>Cover</span>
                 </button>
                 <button class="nav-item" data-tab="tab-pages" title="페이지">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -36,6 +36,14 @@
                         <polyline points="10 9 9 9 8 9" />
                     </svg>
                     <span>Pages</span>
+                </button>
+                <button class="nav-item" data-tab="tab-text" title="텍스트">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="4 7 4 4 20 4 20 7" />
+                        <line x1="9" y1="20" x2="15" y2="20" />
+                        <line x1="12" y1="4" x2="12" y2="20" />
+                    </svg>
+                    <span>Text</span>
                 </button>
                 <button class="nav-item" data-tab="tab-comment" title="코멘트">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -54,6 +62,14 @@
                         <line x1="16.62" y1="12" x2="10.88" y2="21.94" />
                     </svg>
                     <span>Theme</span>
+                </button>
+                <button class="nav-item" data-tab="tab-data" title="데이터">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                    </svg>
+                    <span>Data</span>
                 </button>
 
             </div>
@@ -136,7 +152,7 @@
             <!-- 1. 텍스트 서식 탭 -->
             <div id="tab-description" class="tab-content active">
                 <div class="section-title">
-                    <h2>Description</h2>
+                    <h2>Cover</h2>
                     <span class="deco-line"></span>
                 </div>
 
@@ -234,7 +250,88 @@
 
                 </div>
 
-                <div class="section-title" style="margin-top: 24px;">
+
+            </div>
+
+            <!-- 3. 페이지 탭 -->
+            <div id="tab-pages" class="tab-content">
+                <div class="section-title">
+                    <h2>Dialogue Pages</h2>
+                    <span class="deco-line"></span>
+                </div>
+                <div class="sub-section">
+                    <h3>PAGE OPTIONS</h3>
+                    <div class="control-grid">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="enablePageFold" checked>
+                            <label for="enablePageFold">페이지 접기</label>
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="showHeaderWhenFoldOff">
+                            <label for="showHeaderWhenFoldOff">접기 OFF일 때 헤더 표시</label>
+                        </div>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="hidePageNumbers">
+                        <label for="hidePageNumbers">페이지 헤더 번호 지우기</label>
+                    </div>
+                </div>
+                <!-- 페이지 내 이미지 크기 조절 -->
+                <div class="sub-section">
+                    <h3>IMAGE SIZE</h3>
+                    <div class="input-group">
+                        <label>이미지 기본 너비 (화면 대비) <span id="defaultImageWidthValue"
+                                style="color:var(--accent-blue);">100%</span></label>
+                        <input type="range" id="defaultImageWidth" class="spacing-slider" min="30" max="100" value="100"
+                            style="width: 100%;">
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">
+                            • 이 설정은 모든 이미지의 기본 크기입니다.<br>
+                            • 개별 이미지 크기 조정: [IMG:URL:크기] 형식으로 직접 편집 (예: [IMG:주소:70])
+                        </p>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h3>DIVIDER STYLE</h3>
+                    <div class="input-group">
+                        <label>구분선 [HR] 디자인</label>
+                        <div class="select-wrapper">
+                            <select id="dividerStyle" style="width:100%;">
+                                <option value="line">────────────</option>
+                                <option value="fleuron">─── ❧ ───</option>
+                                <option value="dots">· · · · · · ·</option>
+                                <option value="stars">✦ ─── ✦ ─── ✦</option>
+                                <option value="diamond">◇ ─ ◇ ─ ◇</option>
+                                <option value="wave">〰〰〰〰〰</option>
+                                <option value="cross">† ─── † ─── †</option>
+                                <option value="custom">직접 입력...</option>
+                            </select>
+                        </div>
+                        <input type="text" id="dividerCustomText" placeholder="직접 입력 (예: ── ✿ ──)"
+                            style="display:none; margin-top:8px;">
+                    </div>
+                </div>
+                <div class="control-grid" style="margin-top: 16px; margin-bottom: 15px;">
+                    <button id="addSection" class="btn-ghost">
+                        <span>+ NEW SECTION</span>
+                    </button>
+                    <button id="addPage" class="btn-accent">
+                        <span>+ NEW PAGE</span>
+                    </button>
+                </div>
+                <button id="deleteAllPages" class="btn-reset full-width" style="margin-bottom: 15px;">
+                    <span>🗑️ 전체 페이지 삭제</span>
+                </button>
+                <div id="pagesList" class="cards-list"></div>
+
+                <div id="totalStats">
+                    <!-- 전체 통계가 여기 표시됩니다 -->
+                </div>
+            </div>
+
+            <!-- 4. 텍스트 탭 -->
+            <div id="tab-text" class="tab-content">
+                <div class="section-title">
                     <h2>Text Formatting</h2>
                     <span class="deco-line"></span>
                 </div>
@@ -243,7 +340,7 @@
                     <div class="control-grid">
                         <div class="checkbox-wrapper">
                             <input type="checkbox" id="useRoundedQuotes">
-                            <label for="useRoundedQuotes">둥근 따옴표 (" " → “ ”)</label>
+                            <label for="useRoundedQuotes">둥근 따옴표 (" " → " ")</label>
                         </div>
                         <div class="checkbox-wrapper">
                             <input type="checkbox" id="useTextIndent">
@@ -436,110 +533,9 @@
                         <!-- 프리셋 슬롯이 동적으로 생성됩니다 -->
                     </div>
                 </div>
-
-                <div class="sub-section">
-                    <h3>DATA MANAGEMENT</h3>
-                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">현재 브라우저에 저장된 모든 데이터를 JSON
-                        파일로 저장하거나 불러올 수 있습니다.</p>
-                    <div class="control-grid" style="gap: 10px;">
-                        <button id="exportData" class="btn-ghost full-width">
-                            <span>📥 데이터 내보내기</span>
-                        </button>
-                        <button id="importData" class="btn-ghost full-width">
-                            <span>📤 데이터 불러오기</span>
-                        </button>
-                    </div>
-                    <input type="file" id="importFileInput" accept=".json" style="display: none;">
-                </div>
-
-                <div class="sub-section">
-                    <h3>RESET</h3>
-                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">현재 작업 중인 내용을 모두 초기화합니다.
-                        저장된 프리셋과 테마는 유지됩니다.</p>
-                    <button id="resetData" class="btn-reset full-width">
-                        <span>🗑️ 현재 내용 초기화</span>
-                    </button>
-                </div>
-
             </div>
 
-            <!-- 3. 페이지 탭 -->
-            <div id="tab-pages" class="tab-content">
-                <div class="section-title">
-                    <h2>Dialogue Pages</h2>
-                    <span class="deco-line"></span>
-                </div>
-                <div class="sub-section">
-                    <h3>PAGE OPTIONS</h3>
-                    <div class="control-grid">
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" id="enablePageFold" checked>
-                            <label for="enablePageFold">페이지 접기</label>
-                        </div>
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" id="showHeaderWhenFoldOff">
-                            <label for="showHeaderWhenFoldOff">접기 OFF일 때 헤더 표시</label>
-                        </div>
-                    </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="hidePageNumbers">
-                        <label for="hidePageNumbers">페이지 헤더 번호 지우기</label>
-                    </div>
-                </div>
-                <!-- 페이지 내 이미지 크기 조절 -->
-                <div class="sub-section">
-                    <h3>IMAGE SIZE</h3>
-                    <div class="input-group">
-                        <label>이미지 기본 너비 (화면 대비) <span id="defaultImageWidthValue"
-                                style="color:var(--accent-blue);">100%</span></label>
-                        <input type="range" id="defaultImageWidth" class="spacing-slider" min="30" max="100" value="100"
-                            style="width: 100%;">
-                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">
-                            • 이 설정은 모든 이미지의 기본 크기입니다.<br>
-                            • 개별 이미지 크기 조정: [IMG:URL:크기] 형식으로 직접 편집 (예: [IMG:주소:70])
-                        </p>
-                    </div>
-                </div>
-
-                <div class="sub-section">
-                    <h3>DIVIDER STYLE</h3>
-                    <div class="input-group">
-                        <label>구분선 [HR] 디자인</label>
-                        <div class="select-wrapper">
-                            <select id="dividerStyle" style="width:100%;">
-                                <option value="line">────────────</option>
-                                <option value="fleuron">─── ❧ ───</option>
-                                <option value="dots">· · · · · · ·</option>
-                                <option value="stars">✦ ─── ✦ ─── ✦</option>
-                                <option value="diamond">◇ ─ ◇ ─ ◇</option>
-                                <option value="wave">〰〰〰〰〰</option>
-                                <option value="cross">† ─── † ─── †</option>
-                                <option value="custom">직접 입력...</option>
-                            </select>
-                        </div>
-                        <input type="text" id="dividerCustomText" placeholder="직접 입력 (예: ── ✿ ──)"
-                            style="display:none; margin-top:8px;">
-                    </div>
-                </div>
-                <div class="control-grid" style="margin-top: 16px; margin-bottom: 15px;">
-                    <button id="addSection" class="btn-ghost">
-                        <span>+ NEW SECTION</span>
-                    </button>
-                    <button id="addPage" class="btn-accent">
-                        <span>+ NEW PAGE</span>
-                    </button>
-                </div>
-                <button id="deleteAllPages" class="btn-reset full-width" style="margin-bottom: 15px;">
-                    <span>🗑️ 전체 페이지 삭제</span>
-                </button>
-                <div id="pagesList" class="cards-list"></div>
-
-                <div id="totalStats">
-                    <!-- 전체 통계가 여기 표시됩니다 -->
-                </div>
-            </div>
-
-            <!-- 4. 코멘트 탭 -->
+            <!-- 5. 코멘트 탭 -->
             <div id="tab-comment" class="tab-content">
                 <div class="section-title">
                     <h2>Comment Section</h2>
@@ -715,6 +711,39 @@
                         저장</button>
                 </div>
             </div>
+
+            <!-- 6. 데이터 탭 -->
+            <div id="tab-data" class="tab-content">
+                <div class="section-title">
+                    <h2>Data</h2>
+                    <span class="deco-line"></span>
+                </div>
+
+                <div class="sub-section">
+                    <h3>DATA MANAGEMENT</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">현재 브라우저에 저장된 모든 데이터를 JSON
+                        파일로 저장하거나 불러올 수 있습니다.</p>
+                    <div class="control-grid" style="gap: 10px;">
+                        <button id="exportData" class="btn-ghost full-width">
+                            <span>📥 데이터 내보내기</span>
+                        </button>
+                        <button id="importData" class="btn-ghost full-width">
+                            <span>📤 데이터 불러오기</span>
+                        </button>
+                    </div>
+                    <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                </div>
+
+                <div class="sub-section">
+                    <h3>RESET</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">현재 작업 중인 내용을 모두 초기화합니다.
+                        저장된 프리셋과 테마는 유지됩니다.</p>
+                    <button id="resetData" class="btn-reset full-width">
+                        <span>🗑️ 현재 내용 초기화</span>
+                    </button>
+                </div>
+            </div>
+
         </div>
         <button class="panel-toggle-btn" id="panelToggle" title="패널 열기/닫기">
             <svg class="panel-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
