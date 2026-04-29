@@ -14,7 +14,30 @@ document.addEventListener('DOMContentLoaded', async function () {
     localImages = await hydrateLocalImages({});
     loadChapters();
     renderChapterList();
+    setupMemoryNav();
 });
+
+function setupMemoryNav() {
+    const navMemory = document.getElementById('navMemory');
+    const openEditor = document.getElementById('openEditor');
+    const tabArchive = document.getElementById('tabArchive');
+    const tabMemory = document.getElementById('tabMemory');
+
+    navMemory.addEventListener('click', function () {
+        tabArchive.classList.remove('active');
+        tabMemory.classList.add('active');
+        navMemory.classList.add('active');
+        openEditor.classList.remove('active');
+    });
+
+    openEditor.addEventListener('click', function () {
+        tabMemory.classList.remove('active');
+        tabArchive.classList.add('active');
+        openEditor.classList.add('active');
+        navMemory.classList.remove('active');
+    });
+}
+
 
 function setupPanelToggle() {
     const btn = document.getElementById('panelToggle');
