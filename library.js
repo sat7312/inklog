@@ -5,6 +5,7 @@ let chapters = [];
 let selectedChapterId = null;
 let currentLibraryViewMode = 'description';
 let readerScrollRaf = null;
+let lastReadAnchors = {};
 
 document.addEventListener('DOMContentLoaded', async function () {
     setupThemeToggle();
@@ -28,6 +29,8 @@ function setupMemoryNav() {
         tabMemory.classList.add('active');
         navMemory.classList.add('active');
         openEditor.classList.remove('active');
+        if (selectedChapterId !== null) delete lastReadAnchors[selectedChapterId];
+        renderDescription(null);
     });
 
     openEditor.addEventListener('click', function () {
@@ -35,6 +38,10 @@ function setupMemoryNav() {
         tabArchive.classList.add('active');
         openEditor.classList.add('active');
         navMemory.classList.remove('active');
+        if (selectedChapterId !== null) {
+            const chapter = chapters.find(function (item) { return item.id === selectedChapterId; });
+            if (chapter) renderDescription(chapter);
+        }
     });
 }
 
@@ -50,17 +57,11 @@ function setupPanelToggle() {
 }
 
 function setupLibraryControls() {
-    const openEditor = document.getElementById('openEditor');
-    if (openEditor) {
-        openEditor.addEventListener('click', function () {
-            window.location.href = 'editor.html';
-        });
-    }
-
     const addArchiveBtn = document.getElementById('addArchive');
     if (addArchiveBtn) {
         addArchiveBtn.addEventListener('click', function () {
             localStorage.removeItem(EDITING_CHAPTER_KEY);
+            localStorage.removeItem(STORAGE_KEY);
             window.location.href = 'editor.html';
         });
     }
@@ -229,6 +230,7 @@ function renderChapterList() {
 
 function selectChapter(id) {
     if (selectedChapterId === id) {
+        delete lastReadAnchors[id];
         selectedChapterId = null;
         renderDescription(null);
         renderChapterList();
@@ -236,6 +238,7 @@ function selectChapter(id) {
         return;
     }
 
+    delete lastReadAnchors[id];
     selectedChapterId = id;
     const chapter = chapters.find(function (item) {
         return item.id === id;
@@ -253,9 +256,19 @@ function toggleChapterView(id) {
     const shouldShowDescription = selectedChapterId === id && currentLibraryViewMode === 'reader';
     selectedChapterId = id;
     if (shouldShowDescription) {
+        const currentAnchor = getCurrentReaderAnchorId();
+        if (currentAnchor) lastReadAnchors[id] = currentAnchor;
         renderDescription(chapter);
     } else {
         renderReader(chapter);
+        const savedAnchor = lastReadAnchors[id];
+        if (savedAnchor) {
+            const details = document.getElementById(savedAnchor);
+            if (details && details.tagName === 'DETAILS') {
+                details.open = true;
+                updateActiveOutlineItem(savedAnchor);
+            }
+        }
     }
     renderChapterList();
 }
@@ -425,11 +438,11 @@ function setupReaderInteractions() {
             if (details.open) {
                 closeOtherReaderDetails(details);
                 updateActiveOutlineItem(details.id);
+            } else {
+                updateActiveOutlineItem(null);
             }
         });
     });
-
-    syncActiveOutlineWithReader();
 }
 
 function renderDescription(chapter) {
