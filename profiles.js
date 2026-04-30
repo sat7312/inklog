@@ -26,12 +26,10 @@ function updateProfilesList() {
 
         profileSection.innerHTML =
             '<div class="profile-header profile-drag-handle" draggable="true" data-index="' + index + '">' +
-            '<div class="profile-title-group profile-header-toggle" data-index="' + index + '" style="cursor:pointer;">' +
+            '<div class="profile-title-group" data-index="' + index + '">' +
             '<span class="profile-title" id="profileTitle' + index + '">' + profileTitle + '</span>' +
             '</div>' +
             '<div class="page-controls">' +
-            '<button class="btn-move btn-profile-move-up" data-index="' + index + '" title="위로">▲</button>' +
-            '<button class="btn-move btn-profile-move-down" data-index="' + index + '" title="아래로">▼</button>' +
             '<button class="btn-profile-delete" data-index="' + index + '" title="프로필 삭제">×</button>' +
             '</div>' +
             '</div>' +
@@ -99,13 +97,13 @@ function updateProfilesList() {
 }
 
 function attachProfileEvents(profilesList) {
-    profilesList.querySelectorAll('.profile-header-toggle').forEach(el => {
-        el.addEventListener('click', function () {
-            const handle = this.closest('.profile-drag-handle');
+    profilesList.querySelectorAll('.profile-section').forEach(section => {
+        section.addEventListener('click', function (e) {
+            if (e.target.closest('button, input, textarea, select, option, label, a')) return;
+            const handle = this.querySelector('.profile-drag-handle');
             if (handle && handle.dataset.suppressClick === 'true') return;
-            const section = this.closest('.profile-section');
-            section.classList.toggle('collapsed');
             const idx = parseInt(this.dataset.index);
+            this.classList.toggle('collapsed');
             if (section.classList.contains('collapsed')) {
                 collapsedProfiles.add(profiles[idx]);
             } else {
@@ -226,16 +224,6 @@ function attachProfileEvents(profilesList) {
                     showNotification('스포이드 사용 실패');
                 }
             }
-        });
-    });
-    profilesList.querySelectorAll('.btn-profile-move-up').forEach(btn => {
-        btn.addEventListener('click', e => {
-            moveProfileUp(parseInt(e.target.dataset.index));
-        });
-    });
-    profilesList.querySelectorAll('.btn-profile-move-down').forEach(btn => {
-        btn.addEventListener('click', e => {
-            moveProfileDown(parseInt(e.target.dataset.index));
         });
     });
     profilesList.querySelectorAll('.btn-profile-delete').forEach(btn => {
@@ -368,16 +356,4 @@ function setupProfilesDragSort(profilesList) {
         removePlaceholder();
         moveProfileToIndex(draggedIndex, dropIndex);
     });
-}
-
-function moveProfileUp(index) {
-    if (index > 0) {
-        moveProfileToIndex(index, index - 1);
-    }
-}
-
-function moveProfileDown(index) {
-    if (index < profiles.length - 1) {
-        moveProfileToIndex(index, index + 1);
-    }
 }
